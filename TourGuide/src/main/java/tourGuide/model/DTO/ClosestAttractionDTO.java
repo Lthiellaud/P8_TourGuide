@@ -1,10 +1,10 @@
-package tourGuide.model;
+package tourGuide.model.DTO;
 
 import gpsUtil.location.Location;
 
 import java.util.UUID;
 
-public class ClosestAttraction {
+public class ClosestAttractionDTO {
     private String attractionName;
     private Location attractionLocation;
     private Location visitedLocation;
@@ -12,7 +12,7 @@ public class ClosestAttraction {
     private int rewardPoints;
     private transient UUID attractionId;
 
-    public ClosestAttraction(String attractionName, Location attractionLocation, double distance, UUID attractionId) {
+    public ClosestAttractionDTO(String attractionName, Location attractionLocation, double distance, UUID attractionId) {
         this.attractionName = attractionName;
         this.attractionLocation = attractionLocation;
         this.distance = distance;
@@ -35,24 +35,8 @@ public class ClosestAttraction {
         return attractionId;
     }
 
-    public void setAttractionName(String attractionName) {
-        this.attractionName = attractionName;
-    }
-
-    public void setAttractionLocation(Location attractionLocation) {
-        this.attractionLocation = attractionLocation;
-    }
-
-   public void setDistance(double distance) {
-        this.distance = distance;
-   }
-
     public void setVisitedLocation(Location visitedLocation) {
         this.visitedLocation = visitedLocation;
-    }
-
-    public void setAttractionId(UUID attractionId) {
-        this.attractionId = attractionId;
     }
 
     public void setRewardPoints(int rewardPoints) {

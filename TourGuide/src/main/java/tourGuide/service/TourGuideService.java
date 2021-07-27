@@ -8,7 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tourGuide.helper.InternalTestHelper;
-import tourGuide.model.ClosestAttraction;
+import tourGuide.model.DTO.ClosestAttractionDTO;
+import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
@@ -70,21 +71,23 @@ public class TourGuideService {
 	}
 	
 	public List<Provider> getTripDeals(User user) {
-		int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
+		int cumulativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
 		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(), 
-				user.getUserPreferences().getNumberOfChildren(), user.getUserPreferences().getTripDuration(), cumulatativeRewardPoints);
+				user.getUserPreferences().getNumberOfChildren(), user.getUserPreferences().getTripDuration(), cumulativeRewardPoints);
 		user.setTripDeals(providers);
 		return providers;
 	}
 	
 	public VisitedLocation trackUserLocation(User user) {
+		Locale englishLocale = new Locale("en", "EN");
+		Locale.setDefault(englishLocale);
 		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
 		user.addToVisitedLocations(visitedLocation);
 		rewardsService.calculateRewards(user);
 		return visitedLocation;
 	}
 
-	public List<ClosestAttraction> getNearByAttractions(VisitedLocation visitedLocation) {
+	public List<ClosestAttractionDTO> getNearByAttractions(VisitedLocation visitedLocation) {
 		List<Attraction> attractions = gpsUtil.getAttractions();
 
 		logger.debug("Visited location : " + visitedLocation.location.longitude + " - " + visitedLocation.location.latitude);
@@ -93,16 +96,16 @@ public class TourGuideService {
 					+ rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location));
 		}
 
-		List<ClosestAttraction> closestAttractions = attractions.stream()
-				.map(attraction -> new ClosestAttraction(attraction.attractionName,
+		List<ClosestAttractionDTO> closestAttractionDTOs = attractions.stream()
+				.map(attraction -> new ClosestAttractionDTO(attraction.attractionName,
 						new Location(attraction.latitude, attraction.longitude),
 						rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location)
 						,attraction.attractionId))
-				.sorted(Comparator.comparing(ClosestAttraction::getDistance))
+				.sorted(Comparator.comparing(ClosestAttractionDTO::getDistance))
 				.limit(5)
 				.collect(Collectors.toList());
 
-		for (ClosestAttraction attraction : closestAttractions) {
+		for (ClosestAttractionDTO attraction : closestAttractionDTOs) {
 			attraction.setVisitedLocation(visitedLocation.location);
 			attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(),
 					visitedLocation.userId));
@@ -114,9 +117,17 @@ public class TourGuideService {
 						+ attraction.getDistance());
 		}
 
-		return closestAttractions;
+		return closestAttractionDTOs;
 	}
 	
+	public List<UserCurrentLocationDTO> getAllCurrentLocations() {
+		List<User> users = getAllUsers();
+		List<UserCurrentLocationDTO> userCurrentLocationDTOs = users.stream()
+				.map(user -> new UserCurrentLocationDTO(user.getUserId().toString(), getUserLocation(user).location))
+				.collect(Collectors.toList());
+		return userCurrentLocationDTOs;
+	}
+
 	private void addShutDownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() { 
 		      public void run() {

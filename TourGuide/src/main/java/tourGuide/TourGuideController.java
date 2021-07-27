@@ -60,11 +60,11 @@ public class TourGuideController {
     	//
     	// Return object should be the just a JSON mapping of userId to Locations similar to:
     	//     {
-    	//        "019b04a9-067a-4c76-8817-ee75088c3822": {"longitude":-48.188821,"latitude":74.84371} 
+    	//        "Userid" : "019b04a9-067a-4c76-8817-ee75088c3822", {"longitude":-48.188821,"latitude":74.84371}
     	//        ...
     	//     }
     	
-    	return JsonStream.serialize("");
+    	return JsonStream.serialize(tourGuideService.getAllCurrentLocations());
     }
     
     @RequestMapping("/getTripDeals")

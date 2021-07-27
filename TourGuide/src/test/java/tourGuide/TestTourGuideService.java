@@ -2,30 +2,23 @@ package tourGuide;
 
 import gpsUtil.GpsUtil;
 import gpsUtil.location.VisitedLocation;
-import org.junit.Before;
 import org.junit.Test;
 import rewardCentral.RewardCentral;
 import tourGuide.helper.InternalTestHelper;
-import tourGuide.model.ClosestAttraction;
+import tourGuide.model.DTO.ClosestAttractionDTO;
+import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.service.RewardsService;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
 import tripPricer.Provider;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestTourGuideService {
-
-	@Before
-	public void initTest(){
-		Locale englishLocale = new Locale("en", "EN");
-		Locale.setDefault(englishLocale);
-	}
 
 	@Test
 	public void getUserLocation() {
@@ -98,7 +91,6 @@ public class TestTourGuideService {
 		assertEquals(user.getUserId(), visitedLocation.userId);
 	}
 	
-	//@Ignore // Not yet implemented
 	@Test
 	public void getNearbyAttractions() {
 		GpsUtil gpsUtil = new GpsUtil();
@@ -109,11 +101,11 @@ public class TestTourGuideService {
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
 		
-		List<ClosestAttraction> closestAttractions = tourGuideService.getNearByAttractions(visitedLocation);
+		List<ClosestAttractionDTO> closestAttractionDTOs = tourGuideService.getNearByAttractions(visitedLocation);
 
 		tourGuideService.tracker.stopTracking();
 		
-		assertEquals(5, closestAttractions.size());
+		assertEquals(5, closestAttractionDTOs.size());
 	}
 	
 	@Test
@@ -131,6 +123,17 @@ public class TestTourGuideService {
 		
 		assertEquals(5, providers.size());
 	}
-	
+
+	@Test
+	public void getAllCurrentLocations() {
+		GpsUtil gpsUtil = new GpsUtil();
+		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+		InternalTestHelper.setInternalUserNumber(4);
+		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+
+		List<UserCurrentLocationDTO> userCurrentLocationDTOs = tourGuideService.getAllCurrentLocations();
+
+		assertEquals(4,userCurrentLocationDTOs.size());
+	}
 	
 }
