@@ -7,9 +7,10 @@ import java.util.UUID;
 public class ClosestAttraction {
     private String attractionName;
     private Location attractionLocation;
+    private Location visitedLocation;
     private double distance;
     private int rewardPoints;
-    private UUID attractionId;
+    private transient UUID attractionId;
 
     public ClosestAttraction(String attractionName, Location attractionLocation, double distance, UUID attractionId) {
         this.attractionName = attractionName;
@@ -44,9 +45,18 @@ public class ClosestAttraction {
 
    public void setDistance(double distance) {
         this.distance = distance;
+   }
+
+    public void setVisitedLocation(Location visitedLocation) {
+        this.visitedLocation = visitedLocation;
+    }
+
+    public void setAttractionId(UUID attractionId) {
+        this.attractionId = attractionId;
     }
 
     public void setRewardPoints(int rewardPoints) {
         this.rewardPoints = rewardPoints;
-    }
+   }
+
 }
