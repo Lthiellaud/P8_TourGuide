@@ -1,17 +1,17 @@
 package tourGuide.service;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-
 import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
+import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class RewardsService {
@@ -38,18 +38,32 @@ public class RewardsService {
 	}
 	
 	public void calculateRewards(User user) {
-		List<VisitedLocation> userLocations = user.getVisitedLocations();
+		CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
+
 		List<Attraction> attractions = gpsUtil.getAttractions();
-		
-		for(VisitedLocation visitedLocation : userLocations) {
-			for(Attraction attraction : attractions) {
-				if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+
+		userLocations.forEach( visitedLocation -> {
+			attractions.forEach(attraction -> {
+				if(user.getUserRewards().parallelStream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
 					if(nearAttraction(visitedLocation, attraction)) {
 						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
 					}
 				}
-			}
-		}
+			});
+		});
+
+
+//		VisitedLocation lastUserLocation = user.getLastVisitedLocation();
+//		List<Attraction> attractions = gpsUtil.getAttractions();
+//
+//		attractions.forEach(attraction -> {
+//			if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+//				if(nearAttraction(lastUserLocation, attraction)) {
+//					user.addUserReward(new UserReward(lastUserLocation, attraction, getRewardPoints(attraction, user)));
+//				}
+//			}
+//		});
+
 	}
 
 	public int getRewardPoints(Attraction attraction, User user) {

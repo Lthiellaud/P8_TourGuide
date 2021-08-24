@@ -90,39 +90,61 @@ public class TourGuideService {
 	public List<ClosestAttractionDTO> getNearByAttractions(VisitedLocation visitedLocation) {
 		List<Attraction> attractions = gpsUtil.getAttractions();
 
-		logger.debug("Visited location : " + visitedLocation.location.longitude + " - " + visitedLocation.location.latitude);
-		for (Attraction attraction : attractions) {
-			logger.debug("Attraction " + attraction.attractionName + " distance : "
-					+ rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location));
-		}
+//		logger.debug("Visited location : " + visitedLocation.location.longitude + " - " + visitedLocation.location.latitude);
+//		for (Attraction attraction : attractions) {
+//			logger.debug("Attraction " + attraction.attractionName + " distance : "
+//					+ rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location));
+//		}
 
-		List<ClosestAttractionDTO> closestAttractionDTOs = attractions.stream()
+		List<ClosestAttractionDTO> closestAttractionDTOs = attractions.parallelStream()
+				//Create a ClosestAttractionDTO form an Attraction, calculating the distance Attraction/User
 				.map(attraction -> new ClosestAttractionDTO(attraction.attractionName,
 						new Location(attraction.latitude, attraction.longitude),
 						rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location)
 						,attraction.attractionId))
+				//Sort the ClosestAttractionDTOs from the nearest to the farthest
 				.sorted(Comparator.comparing(ClosestAttractionDTO::getDistance))
+				//take the 5 nearest
 				.limit(5)
 				.collect(Collectors.toList());
 
-		for (ClosestAttractionDTO attraction : closestAttractionDTOs) {
-			attraction.setVisitedLocation(visitedLocation.location);
-			attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(),
-					visitedLocation.userId));
-			logger.debug("Attraction " + attraction.getAttractionName() + " - "
-						+ attraction.getAttractionLocation().latitude +  " - "
-						+ attraction.getAttractionLocation().longitude +  " - "
-						+ visitedLocation.location.latitude +  " - "
-						+ visitedLocation.location.longitude +  " - "
-						+ attraction.getDistance());
-		}
+		closestAttractionDTOs = closestAttractionDTOs.parallelStream()
+				.map(attraction -> {attraction.setVisitedLocation(visitedLocation.location);
+									attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(), visitedLocation.userId));
+									return attraction;})
+				.collect(Collectors.toList());
+
+//		for (ClosestAttractionDTO attraction : closestAttractionDTOs) {
+//			attraction.setVisitedLocation(visitedLocation.location);
+//			attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(),
+//					visitedLocation.userId));
+//			logger.debug("Attraction " + attraction.getAttractionName() + " - "
+//						+ attraction.getAttractionLocation().latitude +  " - "
+//						+ attraction.getAttractionLocation().longitude +  " - "
+//						+ visitedLocation.location.latitude +  " - "
+//						+ visitedLocation.location.longitude +  " - "
+//						+ attraction.getDistance());
+//		}
+
+//		closestAttractionDTOs.forEach( attraction -> {
+//					attraction.setVisitedLocation(visitedLocation.location);
+//					attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(),
+//							visitedLocation.userId));
+//					logger.debug("Attraction " + attraction.getAttractionName() + " - "
+//							+ attraction.getAttractionLocation().latitude + " - "
+//							+ attraction.getAttractionLocation().longitude + " - "
+//							+ visitedLocation.location.latitude + " - "
+//							+ visitedLocation.location.longitude + " - "
+//							+ attraction.getDistance());
+//				}
+//		);
 
 		return closestAttractionDTOs;
 	}
 	
 	public List<UserCurrentLocationDTO> getAllCurrentLocations() {
 		List<User> users = getAllUsers();
-		List<UserCurrentLocationDTO> userCurrentLocationDTOs = users.stream()
+		List<UserCurrentLocationDTO> userCurrentLocationDTOs = users.parallelStream()
 				.map(user -> new UserCurrentLocationDTO(user.getUserId().toString(), getUserLocation(user).location))
 				.collect(Collectors.toList());
 		return userCurrentLocationDTOs;
