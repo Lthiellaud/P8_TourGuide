@@ -1,18 +1,17 @@
-package tourGuide;
+package tourGuide.service;
 
 import gpsUtil.GpsUtil;
 import gpsUtil.location.VisitedLocation;
+import org.javamoney.moneta.Money;
 import org.junit.Test;
 import rewardCentral.RewardCentral;
 import tourGuide.helper.InternalTestHelper;
-import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
-import tourGuide.service.GpsService;
-import tourGuide.service.RewardsService;
-import tourGuide.service.UserService;
 import tourGuide.user.User;
+import tourGuide.user.UserPreferences;
 import tripPricer.Provider;
 
+import javax.money.Monetary;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -50,13 +49,13 @@ public class TestUserService {
 		userService.addUser(user);
 		userService.addUser(user2);
 		
-		User retrivedUser = userService.getUser(user.getUserName());
-		User retrivedUser2 = userService.getUser(user2.getUserName());
+		User retrievedUser = userService.getUser(user.getUserName());
+		User retrievedUser2 = userService.getUser(user2.getUserName());
 
 		userService.tracker.stopTracking();
 		
-		assertEquals(user, retrivedUser);
-		assertEquals(user2, retrivedUser2);
+		assertEquals(user, retrievedUser);
+		assertEquals(user2, retrievedUser2);
 	}
 	
 	@Test
@@ -82,50 +81,14 @@ public class TestUserService {
 	}
 	
 	@Test
-	public void trackUser() throws ExecutionException, InterruptedException {
-		GpsUtil gpsUtil = new GpsUtil();
-		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
-		InternalTestHelper.setInternalUserNumber(0);
-		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
-		UserService userService = new UserService(gpsService);
-
-		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		VisitedLocation visitedLocation = gpsService.trackUserLocation(user);
-		
-		userService.tracker.stopTracking();
-		
-		assertEquals(user.getUserId(), visitedLocation.userId);
-	}
-	
-	@Test
-	public void getNearbyAttractions() throws ExecutionException, InterruptedException {
-		GpsUtil gpsUtil = new GpsUtil();
-		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
-		InternalTestHelper.setInternalUserNumber(0);
-		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
-		UserService userService = new UserService(gpsService);
-
-		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		VisitedLocation visitedLocation = gpsService.trackUserLocation(user);
-		
-		List<ClosestAttractionDTO> closestAttractionDTOs = gpsService.getNearByAttractions(visitedLocation);
-
-		userService.tracker.stopTracking();
-		
-		assertEquals(5, closestAttractionDTOs.size());
-	}
-	
-	@Test
 	public void getTripDeals() {
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
-		InternalTestHelper.setInternalUserNumber(0);
+		InternalTestHelper.setInternalUserNumber(1);
 		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
 		UserService userService = new UserService(gpsService);
 
-		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-
-		List<Provider> providers = userService.getTripDeals(user);
+		List<Provider> providers = userService.getTripDeals("internalUser0");
 		
 		userService.tracker.stopTracking();
 		
@@ -144,5 +107,35 @@ public class TestUserService {
 
 		assertEquals(4,userCurrentLocationDTOs.size());
 	}
-	
+
+	@Test
+	public void updateUserPreferences() {
+		GpsUtil gpsUtil = new GpsUtil();
+		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+		InternalTestHelper.setInternalUserNumber(1);
+		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
+		UserService userService = new UserService(gpsService);
+
+		UserPreferences userPreferences = new UserPreferences();
+		userPreferences.setTripDuration(7);
+		userPreferences.setNumberOfChildren(3);
+		userPreferences.setNumberOfAdults(2);
+		userPreferences.setAttractionProximity(10);
+		userPreferences.setCurrency(Monetary.getCurrency("EUR"));
+		userPreferences.setHighPricePoint(Money.of(500, userPreferences.getCurrency()));
+		userPreferences.setLowerPricePoint(Money.of(100, userPreferences.getCurrency()));
+		userPreferences.setTicketQuantity((5));
+
+		User user = userService.updateUserPreferences("internalUser0", userPreferences);
+
+		UserPreferences newUserPreferences = user.getUserPreferences();
+		assertEquals(7,newUserPreferences.getTripDuration());
+		assertEquals(3,newUserPreferences.getNumberOfChildren());
+		assertEquals(2,newUserPreferences.getNumberOfAdults());
+		assertEquals(10,newUserPreferences.getAttractionProximity());
+		assertEquals(Monetary.getCurrency("EUR"),newUserPreferences.getCurrency());
+		assertEquals(Money.of(500, Monetary.getCurrency("EUR")),newUserPreferences.getHighPricePoint());
+		assertEquals(Money.of(100, Monetary.getCurrency("EUR")) ,newUserPreferences.getLowerPricePoint());
+		assertEquals(5,newUserPreferences.getTicketQuantity());
+	}
 }

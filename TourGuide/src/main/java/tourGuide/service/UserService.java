@@ -9,6 +9,7 @@ import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
+import tourGuide.user.UserPreferences;
 import tourGuide.user.UserReward;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
@@ -22,7 +23,7 @@ import java.util.stream.IntStream;
 
 @Service
 public class UserService {
-	private Logger logger = LoggerFactory.getLogger(UserService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 	private final GpsService gpsService;
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
@@ -32,20 +33,22 @@ public class UserService {
 		this.gpsService = gpsService;
 
 		if(testMode) {
-			logger.info("TestMode enabled");
-			logger.debug("Initializing users");
+			LOGGER.info("TestMode enabled");
+			LOGGER.debug("Initializing users");
 			initializeInternalUsers();
-			logger.debug("Finished initializing users");
+			LOGGER.debug("Finished initializing users");
 		}
 		tracker = new Tracker(this, gpsService);
 		addShutDownHook();
 	}
 	
-	public List<UserReward> getUserRewards(User user) {
-		return user.getUserRewards();
+	public List<UserReward> getUserRewards(String userName) {
+		return getUser(userName).getUserRewards();
 	}
 	
-	public VisitedLocation getUserLocation(User user) throws ExecutionException, InterruptedException {
+	public VisitedLocation getUserLocation(String userName) throws ExecutionException, InterruptedException {
+		User user = getUser(userName);
+
 		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ?
 			user.getLastVisitedLocation() :
 			gpsService.trackUserLocation(user);
@@ -66,8 +69,10 @@ public class UserService {
 		}
 	}
 	
-	public List<Provider> getTripDeals(User user) {
-		int cumulativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
+	public List<Provider> getTripDeals(String userName) {
+		User user = getUser(userName);
+
+		int cumulativeRewardPoints = user.getUserRewards().stream().mapToInt(UserReward::getRewardPoints).sum();
 		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(), 
 				user.getUserPreferences().getNumberOfChildren(), user.getUserPreferences().getTripDuration(), cumulativeRewardPoints);
 		user.setTripDeals(providers);
@@ -80,11 +85,9 @@ public class UserService {
 		List<UserCurrentLocationDTO> userCurrentLocationDTOs = users.parallelStream()
 				.map(user -> {
 					try {
-						return new UserCurrentLocationDTO(user.getUserId().toString(), getUserLocation(user).location);
-					} catch (ExecutionException e) {
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						return new UserCurrentLocationDTO(user.getUserId().toString(), getUserLocation(user.getUserName()).location);
+					} catch (ExecutionException | InterruptedException e) {
+						LOGGER.error("getLocation - Error during retrieving user location");
 					}
 					return null;
 				})
@@ -99,7 +102,15 @@ public class UserService {
 		      } 
 		    }); 
 	}
-	
+
+	public User updateUserPreferences(String userName, UserPreferences userPreferences) {
+		User user = getUser(userName);
+		if (user != null) {
+			user.setUserPreferences(userPreferences);
+		}
+		return user;
+	}
+
 	/**********************************************************************************
 	 * 
 	 * Methods Below: For Internal Testing
@@ -118,7 +129,7 @@ public class UserService {
 			
 			internalUserMap.put(userName, user);
 		});
-		logger.debug("Created " + InternalTestHelper.getInternalUserNumber() + " internal test users.");
+		LOGGER.debug("Created " + InternalTestHelper.getInternalUserNumber() + " internal test users.");
 	}
 	
 	private void generateUserLocationHistory(User user) {
@@ -143,5 +154,4 @@ public class UserService {
 		LocalDateTime localDateTime = LocalDateTime.now().minusDays(new Random().nextInt(30));
 	    return Date.from(localDateTime.toInstant(ZoneOffset.UTC));
 	}
-	
 }

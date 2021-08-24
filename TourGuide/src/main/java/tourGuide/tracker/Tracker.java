@@ -15,7 +15,7 @@ import tourGuide.service.UserService;
 import tourGuide.user.User;
 
 public class Tracker extends Thread {
-	private Logger logger = LoggerFactory.getLogger(Tracker.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(Tracker.class);
 	private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
 	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 	private final UserService userService;
@@ -42,27 +42,25 @@ public class Tracker extends Thread {
 		StopWatch stopWatch = new StopWatch();
 		while(true) {
 			if(Thread.currentThread().isInterrupted() || stop) {
-				logger.debug("Tracker stopping");
+				LOGGER.debug("Tracker stopping");
 				break;
 			}
 			
 			List<User> users = userService.getAllUsers();
-			logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
+			LOGGER.debug("Begin Tracker. Tracking " + users.size() + " users.");
 			stopWatch.start();
 			users.forEach(u -> {
 				try {
 					gpsService.trackUserLocation(u);
-				} catch (ExecutionException e) {
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				} catch (ExecutionException | InterruptedException e) {
+					LOGGER.error("getLocation - Error during retrieving user location");
 				}
 			});
 			stopWatch.stop();
-			logger.debug("Tracker Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds."); 
+			LOGGER.debug("Tracker Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
 			stopWatch.reset();
 			try {
-				logger.debug("Tracker sleeping");
+				LOGGER.debug("Tracker sleeping");
 				TimeUnit.SECONDS.sleep(trackingPollingInterval);
 			} catch (InterruptedException e) {
 				break;
