@@ -1,8 +1,9 @@
 package tourGuide.controller;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import gpsUtil.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,20 +14,27 @@ import org.springframework.web.bind.annotation.*;
 import com.jsoniter.output.JsonStream;
 
 import gpsUtil.location.VisitedLocation;
-import tourGuide.service.TourGuideService;
+import tourGuide.model.DTO.ClosestAttractionDTO;
+import tourGuide.model.DTO.UserCurrentLocationDTO;
+import tourGuide.service.GpsService;
+import tourGuide.service.UserService;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
+import tourGuide.user.UserReward;
 import tripPricer.Provider;
 
 @RestController
 public class TourGuideController {
 
-    private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
+    private Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
-	TourGuideService tourGuideService;
+    UserService userService;
 
-	//  TODO: Passer en ResponseEntity.
+    @Autowired
+    GpsService gpsService;
+
+    //  TODO: Passer en ResponseEntity.
 
     @RequestMapping("/")
     public String index() {
@@ -34,32 +42,47 @@ public class TourGuideController {
     }
     
     @RequestMapping("/getLocation") 
-    public String getLocation(@RequestParam String userName) {
-    	VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
-		return JsonStream.serialize(visitedLocation.location);
+    public ResponseEntity<Location> getLocation(@RequestParam String userName) {
+        try {
+            VisitedLocation visitedLocation = userService.getUserLocation(getUser(userName));
+            return new ResponseEntity<>(visitedLocation.location, HttpStatus.OK);
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     
     @RequestMapping("/getNearbyAttractions")
-    public String getNearbyAttractions(@RequestParam String userName) {
-    	VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
-    	return JsonStream.serialize(tourGuideService.getNearByAttractions(visitedLocation));
+    public ResponseEntity<List<ClosestAttractionDTO>> getNearbyAttractions(@RequestParam String userName) {
+
+        try {
+            VisitedLocation visitedLocation = userService.getUserLocation(getUser(userName));
+            return new ResponseEntity<>(gpsService.getNearByAttractions(visitedLocation), HttpStatus.OK);
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     
     @RequestMapping("/getRewards") 
-    public String getRewards(@RequestParam String userName) {
-    	return JsonStream.serialize(tourGuideService.getUserRewards(getUser(userName)));
+    public ResponseEntity<List<UserReward>> getRewards(@RequestParam String userName) {
+    	return new ResponseEntity<>(userService.getUserRewards(getUser(userName)), HttpStatus.OK);
     }
     
     @RequestMapping("/getAllCurrentLocations")
-    public String getAllCurrentLocations() {
-    	return JsonStream.serialize(tourGuideService.getAllCurrentLocations());
+    public ResponseEntity<List<UserCurrentLocationDTO>> getAllCurrentLocations() {
+    	return  new ResponseEntity<>(userService.getAllCurrentLocations(), HttpStatus.OK);
     }
 
     @RequestMapping("/getTripDeals")
-    public String getTripDeals(@RequestParam String userName) {
+    public ResponseEntity<List<Provider>> getTripDeals(@RequestParam String userName) {
         //TODO Corriger pour prendre en compte l'attraction
-        List<Provider> providers = tourGuideService.getTripDeals(getUser(userName));
-    	return JsonStream.serialize(providers);
+        List<Provider> providers = userService.getTripDeals(getUser(userName));
+    	return new ResponseEntity<>(providers, HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = "/userPreferences")
@@ -74,7 +97,8 @@ public class TourGuideController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(tourGuideService.getUser(userName), HttpStatus.OK);
+
+        return new ResponseEntity<>(userService.getUser(userName), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/userPreferences")
@@ -91,7 +115,7 @@ public class TourGuideController {
     }
 
     private User getUser(String userName) {
-    	return tourGuideService.getUser(userName);
+    	return userService.getUser(userName);
     }
 
 
