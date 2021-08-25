@@ -2,11 +2,13 @@ package tourGuide.service;
 
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
+import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
+import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
@@ -14,6 +16,8 @@ import tourGuide.user.UserReward;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
+import javax.money.Monetary;
+import javax.money.UnknownCurrencyException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -69,8 +73,10 @@ public class UserService {
 		}
 	}
 	
-	public List<Provider> getTripDeals(String userName) {
+	public List<Provider> getTripDeals(String userName, String attractionName) {
 		User user = getUser(userName);
+		//tripPricer.getPrice use attractionId and not UserId.
+		//We don't have the tools to retrieve attractionId from attractionName (it is not even define...) so I have let UserId ...
 
 		int cumulativeRewardPoints = user.getUserRewards().stream().mapToInt(UserReward::getRewardPoints).sum();
 		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(), 
@@ -103,12 +109,43 @@ public class UserService {
 		    }); 
 	}
 
-	public User updateUserPreferences(String userName, UserPreferences userPreferences) {
+	public User updateUserPreferences(String userName, UserPreferencesDTO userPreferencesDTO) throws UnknownCurrencyException {
 		User user = getUser(userName);
 		if (user != null) {
+			UserPreferences userPreferences = user.getUserPreferences();
+			userPreferences.setAttractionProximity(userPreferencesDTO.getAttractionProximity());
+			userPreferences.setCurrency(Monetary.getCurrency(userPreferencesDTO.getCurrency()));
+			userPreferences.setHighPricePoint(Money.of(userPreferencesDTO.getHighPricePoint(), userPreferencesDTO.getCurrency()));
+			userPreferences.setLowerPricePoint(Money.of(userPreferencesDTO.getLowerPricePoint(), userPreferencesDTO.getCurrency()));
+			userPreferences.setNumberOfAdults(userPreferencesDTO.getNumberOfAdults());
+			userPreferences.setNumberOfChildren(userPreferencesDTO.getNumberOfChildren());
+			userPreferences.setTicketQuantity(userPreferencesDTO.getTicketQuantity());
+			userPreferences.setTripDuration(userPreferencesDTO.getTripDuration());
 			user.setUserPreferences(userPreferences);
 		}
 		return user;
+	}
+
+	public UserPreferencesDTO getUserPreferences(String userName) {
+		User user = getUser(userName);
+		UserPreferencesDTO userPreferencesDTO = new UserPreferencesDTO();
+		UserPreferences userPreferences = user.getUserPreferences();
+
+		if (user == null) {
+			//to be tested to check the existence of the user
+			userPreferencesDTO.setAttractionProximity(-1);
+		} else {
+			userPreferencesDTO.setAttractionProximity(userPreferences.getAttractionProximity());
+			userPreferencesDTO.setCurrency(userPreferences.getCurrency().getCurrencyCode());
+			userPreferencesDTO.setHighPricePoint(userPreferences.getHighPricePoint().getNumber().intValue());
+			userPreferencesDTO.setLowerPricePoint(userPreferences.getLowerPricePoint().getNumber().intValue());
+			userPreferencesDTO.setNumberOfAdults(userPreferences.getNumberOfAdults());
+			userPreferencesDTO.setNumberOfChildren(userPreferences.getNumberOfChildren());
+			userPreferencesDTO.setTicketQuantity(userPreferences.getTicketQuantity());
+			userPreferencesDTO.setTripDuration(userPreferences.getTripDuration());
+
+		}
+		return userPreferencesDTO;
 	}
 
 	/**********************************************************************************

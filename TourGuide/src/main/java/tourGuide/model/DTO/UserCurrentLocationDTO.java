@@ -10,4 +10,12 @@ public class UserCurrentLocationDTO {
         this.userUUID = userUUID;
         this.userLocation = userLocation;
     }
+
+    public String getUserUUID() {
+        return userUUID;
+    }
+
+    public Location getUserLocation() {
+        return userLocation;
+    }
 }

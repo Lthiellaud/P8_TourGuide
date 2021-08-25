@@ -7,6 +7,7 @@ import org.junit.Test;
 import rewardCentral.RewardCentral;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
+import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
 import tripPricer.Provider;
@@ -88,7 +89,7 @@ public class TestUserService {
 		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
 		UserService userService = new UserService(gpsService);
 
-		List<Provider> providers = userService.getTripDeals("internalUser0");
+		List<Provider> providers = userService.getTripDeals("internalUser0", "Disneyland");
 		
 		userService.tracker.stopTracking();
 		
@@ -116,14 +117,14 @@ public class TestUserService {
 		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
 		UserService userService = new UserService(gpsService);
 
-		UserPreferences userPreferences = new UserPreferences();
+		UserPreferencesDTO userPreferences = new UserPreferencesDTO();
 		userPreferences.setTripDuration(7);
 		userPreferences.setNumberOfChildren(3);
 		userPreferences.setNumberOfAdults(2);
 		userPreferences.setAttractionProximity(10);
-		userPreferences.setCurrency(Monetary.getCurrency("EUR"));
-		userPreferences.setHighPricePoint(Money.of(500, userPreferences.getCurrency()));
-		userPreferences.setLowerPricePoint(Money.of(100, userPreferences.getCurrency()));
+		userPreferences.setCurrency("EUR");
+		userPreferences.setHighPricePoint(500);
+		userPreferences.setLowerPricePoint(100);
 		userPreferences.setTicketQuantity((5));
 
 		User user = userService.updateUserPreferences("internalUser0", userPreferences);
