@@ -35,24 +35,21 @@ public class GpsService {
         this.rewardsService = rewardsService;
     }
 
-    public VisitedLocation trackUserLocation(User user) throws ExecutionException, InterruptedException {
+    public void trackUserLocation(User user) throws ExecutionException, InterruptedException {
 
 //        LOGGER.debug("visitedLocation to be founded for " + user.getUserName());
 
         //TODO do trackUserLocation return void => modify getUserLocation
         //TODO use a list of user instead of a single user => modify getUserLocation
-        CompletableFuture<VisitedLocation> userLocationFuture = new CompletableFuture<>();
+        CompletableFuture<Void> userLocationFuture = new CompletableFuture<>();
 
-        VisitedLocation visitedLocation = userLocationFuture.supplyAsync(user::getUserId)
+        userLocationFuture.supplyAsync(user::getUserId)
                     .thenApplyAsync(gpsUtil::getUserLocation, executor)
-                    .thenApply(loc -> {
+                    .thenAcceptAsync(loc -> {
                         user.addToVisitedLocations(loc);
-                        return loc;})
-                    .thenApplyAsync(loc -> {
                         rewardsService.calculateRewards(user);
-                        return loc;}, executor2)
-                    .get();
-        return visitedLocation;
+                    }, executor2).get();
+
 
 //                        LOGGER.debug("visitedLocation size for " + user.getUserName() + ", " + user.getVisitedLocations().size());
 //                        LOGGER.debug("visitedLocation " + user.getVisitedLocations().get(0).location.latitude + ", "

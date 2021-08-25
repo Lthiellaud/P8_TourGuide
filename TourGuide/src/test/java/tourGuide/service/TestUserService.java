@@ -34,9 +34,9 @@ public class TestUserService {
 		UserService userService = new UserService(gpsService);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		VisitedLocation visitedLocation = gpsService.trackUserLocation(user);
+		gpsService.trackUserLocation(user);
 		userService.tracker.stopTracking();
-		assertEquals(visitedLocation.userId, user.getUserId());
+		assertEquals(user.getVisitedLocations().get(0).userId, user.getUserId());
 	}
 	
 	@Test
@@ -110,6 +110,40 @@ public class TestUserService {
 		List<UserCurrentLocationDTO> userCurrentLocationDTOs = userService.getAllCurrentLocations();
 
 		assertEquals(4,userCurrentLocationDTOs.size());
+	}
+
+	@Test
+	public void getUserPreferencesNull() {
+		GpsUtil gpsUtil = new GpsUtil();
+		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+		InternalTestHelper.setInternalUserNumber(1);
+		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
+		UserService userService = new UserService(gpsService);
+
+		UserPreferencesDTO userPreferencesDTO = userService.getUserPreferences("internalUser2");
+
+		assertEquals(-1, userPreferencesDTO.getAttractionProximity());
+
+	}
+
+	@Test
+	public void getUserPreferences() {
+		GpsUtil gpsUtil = new GpsUtil();
+		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+		InternalTestHelper.setInternalUserNumber(1);
+		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
+		UserService userService = new UserService(gpsService);
+
+		UserPreferencesDTO userPreferencesDTO = userService.getUserPreferences("internalUser0");
+
+		assertEquals(Integer.MAX_VALUE, userPreferencesDTO.getAttractionProximity());
+		assertEquals(1,userPreferencesDTO.getTripDuration());
+		assertEquals(0,userPreferencesDTO.getNumberOfChildren());
+		assertEquals(1,userPreferencesDTO.getNumberOfAdults());
+		assertEquals("USD",userPreferencesDTO.getCurrency());
+		assertEquals(Integer.MAX_VALUE,userPreferencesDTO.getHighPricePoint());
+		assertEquals(0 ,userPreferencesDTO.getLowerPricePoint());
+		assertEquals(1,userPreferencesDTO.getTicketQuantity());
 	}
 
 	@Test

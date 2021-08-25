@@ -49,13 +49,22 @@ public class UserService {
 	public List<UserReward> getUserRewards(String userName) {
 		return getUser(userName).getUserRewards();
 	}
-	
+
+	public VisitedLocation getLastVisitedLocation(User user) {
+		int locationNumber = user.getVisitedLocations().size()-1;
+		if (locationNumber < 0) {
+			return null;
+		}
+		return user.getVisitedLocations().get(locationNumber);
+	}
+
 	public VisitedLocation getUserLocation(String userName) throws ExecutionException, InterruptedException {
 		User user = getUser(userName);
-
-		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ?
-			user.getLastVisitedLocation() :
+		if (user.getVisitedLocations().size() == 0) {
 			gpsService.trackUserLocation(user);
+		}
+		VisitedLocation visitedLocation = getLastVisitedLocation(user);
+
 		return visitedLocation;
 	}
 	
@@ -129,12 +138,12 @@ public class UserService {
 	public UserPreferencesDTO getUserPreferences(String userName) {
 		User user = getUser(userName);
 		UserPreferencesDTO userPreferencesDTO = new UserPreferencesDTO();
-		UserPreferences userPreferences = user.getUserPreferences();
 
 		if (user == null) {
 			//to be tested to check the existence of the user
 			userPreferencesDTO.setAttractionProximity(-1);
 		} else {
+			UserPreferences userPreferences = user.getUserPreferences();
 			userPreferencesDTO.setAttractionProximity(userPreferences.getAttractionProximity());
 			userPreferencesDTO.setCurrency(userPreferences.getCurrency().getCurrencyCode());
 			userPreferencesDTO.setHighPricePoint(userPreferences.getHighPricePoint().getNumber().intValue());

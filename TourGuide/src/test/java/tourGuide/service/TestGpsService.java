@@ -28,9 +28,8 @@ public class TestGpsService {
         UserService userService = new UserService(gpsService);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-        VisitedLocation visitedLocation = gpsService.trackUserLocation(user);
 
-        List<ClosestAttractionDTO> closestAttractionDTOs = gpsService.getNearByAttractions(visitedLocation);
+        List<ClosestAttractionDTO> closestAttractionDTOs = gpsService.getNearByAttractions(userService.getUserLocation("jon"));
 
         userService.tracker.stopTracking();
 
@@ -48,11 +47,11 @@ public class TestGpsService {
         UserService userService = new UserService(gpsService);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-        VisitedLocation visitedLocation = gpsService.trackUserLocation(user);
+        gpsService.trackUserLocation(user);
 
         userService.tracker.stopTracking();
 
-        assertEquals(user.getUserId(), visitedLocation.userId);
+        assertEquals(user.getUserId(), userService.getLastVisitedLocation(user).userId);
     }
 
 
