@@ -14,6 +14,7 @@ import tripPricer.Provider;
 
 import javax.money.Monetary;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -24,6 +25,8 @@ public class TestUserService {
 
 	@Test
 	public void getUserLocation() throws ExecutionException, InterruptedException {
+		Locale englishLocale = new Locale("en", "EN");
+		Locale.setDefault(englishLocale);
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		InternalTestHelper.setInternalUserNumber(0);

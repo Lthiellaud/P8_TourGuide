@@ -14,6 +14,7 @@ import tourGuide.user.UserReward;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -24,6 +25,8 @@ public class TestRewardsService {
 
 	@Test
 	public void userGetRewards() throws ExecutionException, InterruptedException {
+		Locale englishLocale = new Locale("en", "EN");
+		Locale.setDefault(englishLocale);
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 

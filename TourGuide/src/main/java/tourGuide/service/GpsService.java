@@ -27,7 +27,8 @@ public class GpsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     
-    ExecutorService executorService = Executors.newFixedThreadPool(2);
+    ExecutorService executor = Executors.newFixedThreadPool(500);
+    ExecutorService executor2 = Executors.newFixedThreadPool(500);
 
     public GpsService(GpsUtil gpsUtil, RewardsService rewardsService) {
         this.gpsUtil = gpsUtil;
@@ -35,26 +36,32 @@ public class GpsService {
     }
 
     public VisitedLocation trackUserLocation(User user) throws ExecutionException, InterruptedException {
-        Locale englishLocale = new Locale("en", "EN");
-        Locale.setDefault(englishLocale);
 
-//      throws ExecutionException, InterruptedException
-//        CompletableFuture<VisitedLocation> userLocationFuture = new CompletableFuture<>();
-//
-//        userLocationFuture.supplyAsync(user::getUserId, executorService)
-//                    .thenApplyAsync(gpsUtil::getUserLocation)
-//                    .thenApplyAsync(location -> {
-//                        user.addToVisitedLocations(location);
-//                        rewardsService.calculateRewards(user);
-//                        return location;
-//                    });
-//        LOGGER.debug("visitedLocation" + userLocationFuture.get());
-//        return userLocationFuture.get();
+//        LOGGER.debug("visitedLocation to be founded for " + user.getUserName());
 
-        VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-        user.addToVisitedLocations(visitedLocation);
-        rewardsService.calculateRewards(user);
+        //TODO do trackUserLocation return void => modify getUserLocation
+        //TODO use a list of user instead of a single user => modify getUserLocation
+        CompletableFuture<VisitedLocation> userLocationFuture = new CompletableFuture<>();
+
+        VisitedLocation visitedLocation = userLocationFuture.supplyAsync(user::getUserId)
+                    .thenApplyAsync(gpsUtil::getUserLocation, executor)
+                    .thenApply(loc -> {
+                        user.addToVisitedLocations(loc);
+                        return loc;})
+                    .thenApplyAsync(loc -> {
+                        rewardsService.calculateRewards(user);
+                        return loc;}, executor2)
+                    .get();
         return visitedLocation;
+
+//                        LOGGER.debug("visitedLocation size for " + user.getUserName() + ", " + user.getVisitedLocations().size());
+//                        LOGGER.debug("visitedLocation " + user.getVisitedLocations().get(0).location.latitude + ", "
+//                                + user.getVisitedLocations().get(0).location.longitude);
+
+//        VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+//        user.addToVisitedLocations(visitedLocation);
+//        rewardsService.calculateRewards(user);
+//        return visitedLocation;
 
 
     }

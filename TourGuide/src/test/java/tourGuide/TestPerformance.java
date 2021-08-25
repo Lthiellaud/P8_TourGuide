@@ -15,6 +15,7 @@ import tourGuide.user.User;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -45,10 +46,12 @@ public class TestPerformance {
 	//@Ignore
 	@Test
 	public void highVolumeTrackLocation() throws ExecutionException, InterruptedException {
+		Locale englishLocale = new Locale("en", "EN");
+		Locale.setDefault(englishLocale);
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
-		InternalTestHelper.setInternalUserNumber(10);
+		InternalTestHelper.setInternalUserNumber(10000);
 		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
 		UserService userService = new UserService(gpsService);
 
@@ -69,6 +72,8 @@ public class TestPerformance {
 	//@Ignore
 	@Test
 	public void highVolumeGetRewards() {
+		Locale englishLocale = new Locale("en", "EN");
+		Locale.setDefault(englishLocale);
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 
