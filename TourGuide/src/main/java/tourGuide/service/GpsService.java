@@ -28,27 +28,27 @@ public class GpsService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     
     ExecutorService executor = Executors.newFixedThreadPool(500);
-    ExecutorService executor2 = Executors.newFixedThreadPool(500);
 
     public GpsService(GpsUtil gpsUtil, RewardsService rewardsService) {
         this.gpsUtil = gpsUtil;
         this.rewardsService = rewardsService;
     }
 
+    private void updateUser (VisitedLocation loc, User user) {
+
+//        System.out.println(Thread.currentThread() + " - " + user.getUserName()
+//                + " - loc : " + loc.location.longitude + ", " + loc.location.latitude);
+        user.addToVisitedLocations(loc);
+        rewardsService.calculateRewards(user);
+
+    }
+
     public void trackUserLocation(User user) throws ExecutionException, InterruptedException {
 
 //        LOGGER.debug("visitedLocation to be founded for " + user.getUserName());
 
-        //TODO do trackUserLocation return void => modify getUserLocation
-        //TODO use a list of user instead of a single user => modify getUserLocation
-        CompletableFuture<Void> userLocationFuture = new CompletableFuture<>();
-
-        userLocationFuture.supplyAsync(user::getUserId)
-                    .thenApplyAsync(gpsUtil::getUserLocation, executor)
-                    .thenAcceptAsync(loc -> {
-                        user.addToVisitedLocations(loc);
-                        rewardsService.calculateRewards(user);
-                    }, executor2).get();
+          CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId()), executor)
+                    .thenAccept(loc -> updateUser(loc, user));
 
 
 //                        LOGGER.debug("visitedLocation size for " + user.getUserName() + ", " + user.getVisitedLocations().size());

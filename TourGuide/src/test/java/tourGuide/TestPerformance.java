@@ -51,13 +51,17 @@ public class TestPerformance {
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
-		InternalTestHelper.setInternalUserNumber(10000);
+		InternalTestHelper.setInternalUserNumber(100000);
 		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
 		UserService userService = new UserService(gpsService);
 
 		List<User> allUsers = userService.getAllUsers();
-		
-	    StopWatch stopWatch = new StopWatch();
+		System.out.println("BEFORE user 9 visitedLocation number " + allUsers.get(9).getVisitedLocations().size());
+		allUsers.get(9).getVisitedLocations()
+				.forEach(loc -> System.out.println("List BEFORE " + allUsers.get(9).getUserName()
+						+ " - loc : " + loc.location.longitude + ", " + loc.location.latitude));
+
+		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		for(User user : allUsers) {
 			gpsService.trackUserLocation(user);
@@ -65,7 +69,11 @@ public class TestPerformance {
 		stopWatch.stop();
 		userService.tracker.stopTracking();
 
-		System.out.println("highVolumeTrackLocation: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds."); 
+		System.out.println("AFTER user 9 visitedLocation number " + allUsers.get(9).getVisitedLocations().size());
+		allUsers.get(9).getVisitedLocations()
+				.forEach(loc -> System.out.println("List AFTER " +  allUsers.get(9).getUserName()
+						+ " - loc : " + loc.location.longitude + ", " + loc.location.latitude));
+		System.out.println("highVolumeTrackLocation: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
 		assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
 	}
 

@@ -28,7 +28,7 @@ public class TestGpsService {
         UserService userService = new UserService(gpsService);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-
+        userService.addUser(user);
         List<ClosestAttractionDTO> closestAttractionDTOs = gpsService.getNearByAttractions(userService.getUserLocation("jon"));
 
         userService.tracker.stopTracking();

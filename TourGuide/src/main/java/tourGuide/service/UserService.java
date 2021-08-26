@@ -85,7 +85,7 @@ public class UserService {
 	public List<Provider> getTripDeals(String userName, String attractionName) {
 		User user = getUser(userName);
 		//tripPricer.getPrice use attractionId and not UserId.
-		//We don't have the tools to retrieve attractionId from attractionName (it is not even define...) so I have let UserId ...
+		//We don't have the tools to retrieve attractionId from attractionName so I have let UserId ...
 
 		int cumulativeRewardPoints = user.getUserRewards().stream().mapToInt(UserReward::getRewardPoints).sum();
 		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(), 

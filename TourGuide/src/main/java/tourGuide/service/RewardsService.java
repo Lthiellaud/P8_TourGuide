@@ -42,14 +42,14 @@ public class RewardsService {
 
 		List<Attraction> attractions = gpsUtil.getAttractions();
 
-		userLocations.forEach( visitedLocation -> {
-			attractions.forEach(attraction -> {
-				if(user.getUserRewards().parallelStream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+		attractions.forEach(attraction -> {
+			if(user.getUserRewards().parallelStream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+				userLocations.forEach( visitedLocation -> {
 					if(nearAttraction(visitedLocation, attraction)) {
 						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
 					}
-				}
-			});
+				});
+			}
 		});
 
 
