@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
@@ -24,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 public class TestRewardsService {
 
 	@Test
-	public void userGetRewards() throws ExecutionException, InterruptedException {
+	public void userGetRewards() throws InterruptedException {
 		Locale englishLocale = new Locale("en", "EN");
 		Locale.setDefault(englishLocale);
 		GpsUtil gpsUtil = new GpsUtil();
@@ -37,7 +38,11 @@ public class TestRewardsService {
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		Attraction attraction = gpsUtil.getAttractions().get(0);
 		user.addToVisitedLocations(new VisitedLocation(user.getUserId(), attraction, new Date()));
-		gpsService.trackUserLocation(user);
+
+		CountDownLatch trackLatch = new CountDownLatch( 1 );
+		gpsService.trackUserLocation(user, trackLatch);
+		trackLatch.await();
+
 		List<UserReward> userRewards = user.getUserRewards();
 		userService.tracker.stopTracking();
 		assertEquals(userRewards.size(), 1);
@@ -63,6 +68,7 @@ public class TestRewardsService {
 		UserService userService = new UserService(gpsService);
 
 		rewardsService.calculateRewards(userService.getAllUsers().get(0));
+
 		List<UserReward> userRewards = userService.getUserRewards(userService.getAllUsers().get(0).getUserName());
 		userService.tracker.stopTracking();
 

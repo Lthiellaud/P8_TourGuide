@@ -21,6 +21,7 @@ import javax.money.UnknownCurrencyException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -58,14 +59,16 @@ public class UserService {
 		return user.getVisitedLocations().get(locationNumber);
 	}
 
-	public VisitedLocation getUserLocation(String userName) throws ExecutionException, InterruptedException {
+	public VisitedLocation getUserLocation(String userName) throws InterruptedException {
 		User user = getUser(userName);
-		if (user.getVisitedLocations().size() == 0) {
-			gpsService.trackUserLocation(user);
-		}
-		VisitedLocation visitedLocation = getLastVisitedLocation(user);
+		CountDownLatch trackLatch = new CountDownLatch( 1 );
 
-		return visitedLocation;
+		if (user.getVisitedLocations().size() == 0) {
+			gpsService.trackUserLocation(user, trackLatch);
+			trackLatch.await();
+		}
+
+		return getLastVisitedLocation(user);
 	}
 	
 	public User getUser(String userName) {
@@ -101,7 +104,7 @@ public class UserService {
 				.map(user -> {
 					try {
 						return new UserCurrentLocationDTO(user.getUserId().toString(), getUserLocation(user.getUserName()).location);
-					} catch (ExecutionException | InterruptedException e) {
+					} catch (InterruptedException e) {
 						LOGGER.error("getLocation - Error during retrieving user location");
 					}
 					return null;

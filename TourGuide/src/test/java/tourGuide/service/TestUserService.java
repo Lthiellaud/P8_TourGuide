@@ -16,6 +16,7 @@ import javax.money.Monetary;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +35,9 @@ public class TestUserService {
 		UserService userService = new UserService(gpsService);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		gpsService.trackUserLocation(user);
+		CountDownLatch trackLatch = new CountDownLatch( 1 );
+		gpsService.trackUserLocation(user, trackLatch);
+		trackLatch.await();
 		userService.tracker.stopTracking();
 		assertEquals(user.getVisitedLocations().get(0).userId, user.getUserId());
 	}

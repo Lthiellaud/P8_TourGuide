@@ -47,7 +47,7 @@ public class TourGuideController {
         try {
             VisitedLocation visitedLocation = userService.getUserLocation(userName);
             return new ResponseEntity<>(visitedLocation.location, HttpStatus.OK);
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (InterruptedException e) {
             LOGGER.error("getLocation - Error during retrieving user location");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -64,8 +64,8 @@ public class TourGuideController {
         try {
             VisitedLocation visitedLocation = userService.getUserLocation(userName);
             return new ResponseEntity<>(gpsService.getNearByAttractions(visitedLocation), HttpStatus.OK);
-        } catch (ExecutionException | InterruptedException e) {
-            LOGGER.error("getLocation - Error during retrieving user location");
+        } catch (InterruptedException e) {
+            LOGGER.error("getNearbyAttractions - Error during retrieving user location");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 

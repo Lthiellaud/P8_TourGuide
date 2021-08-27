@@ -12,9 +12,8 @@ import tourGuide.user.User;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -27,28 +26,33 @@ public class GpsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     
-    ExecutorService executor = Executors.newFixedThreadPool(500);
+    ExecutorService executorGps = Executors.newFixedThreadPool(100);
 
     public GpsService(GpsUtil gpsUtil, RewardsService rewardsService) {
         this.gpsUtil = gpsUtil;
         this.rewardsService = rewardsService;
     }
 
-    private void updateUser (VisitedLocation loc, User user) {
+    private void updateUser (VisitedLocation loc, User user, CountDownLatch trackLatch) {
 
 //        System.out.println(Thread.currentThread() + " - " + user.getUserName()
 //                + " - loc : " + loc.location.longitude + ", " + loc.location.latitude);
         user.addToVisitedLocations(loc);
         rewardsService.calculateRewards(user);
+        // one user updated
+        trackLatch.countDown();
+
+//        System.out.println(Thread.currentThread() + " - " + user.getUserName()
+//                + " - loc : " + loc.location.longitude + ", " + loc.location.latitude);
 
     }
 
-    public void trackUserLocation(User user) throws ExecutionException, InterruptedException {
+    public void trackUserLocation(User user, CountDownLatch trackLatch) {
 
 //        LOGGER.debug("visitedLocation to be founded for " + user.getUserName());
 
-          CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId()), executor)
-                    .thenAccept(loc -> updateUser(loc, user));
+          CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId()), executorGps)
+                    .thenAccept(loc -> updateUser(loc, user, trackLatch));
 
 
 //                        LOGGER.debug("visitedLocation size for " + user.getUserName() + ", " + user.getVisitedLocations().size());

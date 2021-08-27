@@ -1,10 +1,7 @@
 package tourGuide.tracker;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
@@ -47,15 +44,15 @@ public class Tracker extends Thread {
 			}
 			
 			List<User> users = userService.getAllUsers();
+			CountDownLatch trackLatch = new CountDownLatch( users.size() );
 			LOGGER.debug("Begin Tracker. Tracking " + users.size() + " users.");
 			stopWatch.start();
-			users.forEach(u -> {
-				try {
-					gpsService.trackUserLocation(u);
-				} catch (ExecutionException | InterruptedException e) {
-					LOGGER.error("getLocation - Error during retrieving user location");
-				}
-			});
+			try {
+				users.forEach(u -> gpsService.trackUserLocation(u, trackLatch));
+				trackLatch.await();
+			} catch (InterruptedException e) {
+				LOGGER.error("getLocation - Error during retrieving user location");
+			}
 			stopWatch.stop();
 			LOGGER.debug("Tracker Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
 			stopWatch.reset();

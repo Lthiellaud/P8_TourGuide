@@ -16,6 +16,7 @@ import tourGuide.user.User;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -45,13 +46,13 @@ public class TestPerformance {
 
 	//@Ignore
 	@Test
-	public void highVolumeTrackLocation() throws ExecutionException, InterruptedException {
+	public void highVolumeTrackLocation() {
 		Locale englishLocale = new Locale("en", "EN");
 		Locale.setDefault(englishLocale);
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
-		InternalTestHelper.setInternalUserNumber(100000);
+		InternalTestHelper.setInternalUserNumber(10);
 		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
 		UserService userService = new UserService(gpsService);
 
@@ -61,11 +62,16 @@ public class TestPerformance {
 				.forEach(loc -> System.out.println("List BEFORE " + allUsers.get(9).getUserName()
 						+ " - loc : " + loc.location.longitude + ", " + loc.location.latitude));
 
+		CountDownLatch trackLatch = new CountDownLatch( allUsers.size() );
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
-		for(User user : allUsers) {
-			gpsService.trackUserLocation(user);
+		try {
+			allUsers.forEach(user -> gpsService.trackUserLocation(user, trackLatch));
+			trackLatch.await();
+		} catch (InterruptedException e) {
+			System.out.println("getLocation - Error during retrieving user location");
 		}
+
 		stopWatch.stop();
 		userService.tracker.stopTracking();
 
@@ -95,10 +101,10 @@ public class TestPerformance {
 		Attraction attraction = gpsUtil.getAttractions().get(0);
 		List<User> allUsers = userService.getAllUsers();
 		allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(), attraction, new Date())));
-	     
-	    allUsers.forEach(u -> rewardsService.calculateRewards(u));
-	    
-		for(User user : allUsers) {
+
+		allUsers.forEach(u -> rewardsService.calculateRewards(u));
+
+	    for(User user : allUsers) {
 			assertTrue(user.getUserRewards().size() > 0);
 		}
 		stopWatch.stop();
