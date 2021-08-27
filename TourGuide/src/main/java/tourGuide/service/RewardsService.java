@@ -11,6 +11,7 @@ import tourGuide.user.UserReward;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
@@ -23,6 +24,8 @@ public class RewardsService {
 	private int attractionProximityRange = 200;
 	private final GpsUtil gpsUtil;
 	private final RewardCentral rewardsCentral;
+
+	//TODO improve performances ??
 
 	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
 		this.gpsUtil = gpsUtil;
@@ -46,6 +49,8 @@ public class RewardsService {
 			if(user.getUserRewards().parallelStream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
 				userLocations.forEach( visitedLocation -> {
 					if(nearAttraction(visitedLocation, attraction)) {
+//						CompletableFuture.supplyAsync(() -> getRewardPoints(attraction, user))
+//								.thenAccept(points -> user.addUserReward(new UserReward(visitedLocation, attraction, points)));
 						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
 					}
 				});
