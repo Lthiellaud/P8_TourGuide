@@ -11,7 +11,6 @@ import tourGuide.user.UserReward;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service

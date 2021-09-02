@@ -92,7 +92,7 @@ public class TestPerformance {
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 
 		// Users should be incremented up to 100,000, and test finishes within 20 minutes
-		InternalTestHelper.setInternalUserNumber(100000);
+		InternalTestHelper.setInternalUserNumber(10000);
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		GpsService gpsService = new GpsService(gpsUtil, rewardsService);
@@ -102,11 +102,21 @@ public class TestPerformance {
 		List<User> allUsers = userService.getAllUsers();
 		allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(), attraction, new Date())));
 
-		allUsers.forEach(u -> rewardsService.calculateRewards(u));
+		CountDownLatch trackLatch = new CountDownLatch( allUsers.size() );
+
+		try {
+			allUsers.forEach(user -> gpsService.trackUserLocation(user, trackLatch));
+			trackLatch.await();
+		} catch (InterruptedException e) {
+			System.out.println("getLocation - Error during retrieving user location");
+		}
+
+//		allUsers.forEach(u -> rewardsService.calculateRewards(u));
 
 	    for(User user : allUsers) {
 			assertTrue(user.getUserRewards().size() > 0);
 		}
+
 		stopWatch.stop();
 		userService.tracker.stopTracking();
 
