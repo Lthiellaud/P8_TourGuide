@@ -45,7 +45,7 @@ public class TestRewardsService {
 
 		List<UserReward> userRewards = user.getUserRewards();
 		userService.tracker.stopTracking();
-		assertEquals(userRewards.size(), 1);
+		assertEquals(1, userRewards.size());
 	}
 	
 	@Test

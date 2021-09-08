@@ -24,6 +24,8 @@ public class RewardsService {
 	private final GpsUtil gpsUtil;
 	private final RewardCentral rewardsCentral;
 
+	//TODO improve performances ??
+
 	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
 		this.gpsUtil = gpsUtil;
 		this.rewardsCentral = rewardCentral;
@@ -46,6 +48,8 @@ public class RewardsService {
 			if(user.getUserRewards().parallelStream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
 				userLocations.forEach( visitedLocation -> {
 					if(nearAttraction(visitedLocation, attraction)) {
+//						CompletableFuture.supplyAsync(() -> getRewardPoints(attraction, user))
+//								.thenAccept(points -> user.addUserReward(new UserReward(visitedLocation, attraction, points)));
 						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
 					}
 				});

@@ -26,7 +26,11 @@ public class GpsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     
-    ExecutorService executorGps = Executors.newFixedThreadPool(100);
+    ExecutorService executorGps = Executors.newFixedThreadPool(50);
+
+    //TODO rename GpsService to LocationService
+    //TODO move getAllCurrentLocation from UserService to LocationService
+    //TODO documentation
 
     public GpsService(GpsUtil gpsUtil, RewardsService rewardsService) {
         this.gpsUtil = gpsUtil;

@@ -61,9 +61,9 @@ public class UserService {
 
 	public VisitedLocation getUserLocation(String userName) throws InterruptedException {
 		User user = getUser(userName);
-		CountDownLatch trackLatch = new CountDownLatch( 1 );
 
 		if (user.getVisitedLocations().size() == 0) {
+			CountDownLatch trackLatch = new CountDownLatch( 1 );
 			gpsService.trackUserLocation(user, trackLatch);
 			trackLatch.await();
 		}
@@ -143,7 +143,7 @@ public class UserService {
 		UserPreferencesDTO userPreferencesDTO = new UserPreferencesDTO();
 
 		if (user == null) {
-			//to be tested to check the existence of the user
+			//attractionProximity to be tested to check the existence of the user
 			userPreferencesDTO.setAttractionProximity(-1);
 		} else {
 			UserPreferences userPreferences = user.getUserPreferences();
