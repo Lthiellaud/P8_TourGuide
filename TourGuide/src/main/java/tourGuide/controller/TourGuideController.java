@@ -17,10 +17,12 @@ import tourGuide.user.User;
 import tourGuide.user.UserReward;
 import tripPricer.Provider;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import javax.money.UnknownCurrencyException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+@Api("API of TourGuide application")
 @RestController
 public class TourGuideController {
 
@@ -32,12 +34,14 @@ public class TourGuideController {
     @Autowired
     GpsService gpsService;
 
-    @RequestMapping("/")
+    @ApiOperation(value = "TourGuide home")
+    @RequestMapping(method = RequestMethod.GET, value="/")
     public String index() {
         return "Greetings from TourGuide!";
     }
-    
-    @RequestMapping("/getLocation") 
+
+    @ApiOperation(value = "Return the location of a user from his username")
+    @RequestMapping(method = RequestMethod.GET, value="/getLocation")
     public ResponseEntity<Location> getLocation(@RequestParam String userName) {
         if (userName.equals("")) {
             LOGGER.error("getLocation : userName is mandatory");
@@ -46,6 +50,10 @@ public class TourGuideController {
 
         try {
             VisitedLocation visitedLocation = userService.getUserLocation(userName);
+            if (visitedLocation == null) {
+                LOGGER.error("getLocation : user not found");
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
             return new ResponseEntity<>(visitedLocation.location, HttpStatus.OK);
         } catch (InterruptedException e) {
             LOGGER.error("getLocation - Error during retrieving user location");
@@ -53,8 +61,9 @@ public class TourGuideController {
         }
 
     }
-    
-    @RequestMapping("/getNearbyAttractions")
+
+    @ApiOperation(value = "Return the 5 nearest attractions of a user from his username")
+    @RequestMapping(method = RequestMethod.GET, value="/getNearbyAttractions")
     public ResponseEntity<List<ClosestAttractionDTO>> getNearbyAttractions(@RequestParam String userName) {
         if (userName.equals("")) {
             LOGGER.error("getNearbyAttractions : userName is mandatory");
@@ -63,6 +72,10 @@ public class TourGuideController {
 
         try {
             VisitedLocation visitedLocation = userService.getUserLocation(userName);
+            if (visitedLocation == null) {
+                LOGGER.error("getNearbyAttractions : user not found");
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
             return new ResponseEntity<>(gpsService.getNearByAttractions(visitedLocation), HttpStatus.OK);
         } catch (InterruptedException e) {
             LOGGER.error("getNearbyAttractions - Error during retrieving user location");
@@ -70,23 +83,31 @@ public class TourGuideController {
         }
 
     }
-    
-    @RequestMapping("/getRewards") 
+
+    @ApiOperation(value = "Return the rewards earned by a user from his username")
+    @RequestMapping(method = RequestMethod.GET,value="/getRewards")
     public ResponseEntity<List<UserReward>> getRewards(@RequestParam String userName) {
         if (userName.equals("")) {
             LOGGER.error("getRewards : userName is mandatory");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        if (userService.getUser(userName) == null) {
+            LOGGER.error("getRewards : user not found");
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
 
         return new ResponseEntity<>(userService.getUserRewards(userName), HttpStatus.OK);
     }
-    
-    @RequestMapping("/getAllCurrentLocations")
+
+    @ApiOperation(value = "Return the current location of all connected users")
+    @RequestMapping(method = RequestMethod.GET, value="/getAllCurrentLocations")
     public ResponseEntity<List<UserCurrentLocationDTO>> getAllCurrentLocations() {
     	return  new ResponseEntity<>(userService.getAllCurrentLocations(), HttpStatus.OK);
     }
 
-    @RequestMapping("/getTripDeals")
+    @ApiOperation(value = "Return for a userName, a list of 5 trips to go to a given " +
+            "attraction with the pricing depending on his preferences")
+    @RequestMapping(method = RequestMethod.GET, value="/getTripDeals")
     public ResponseEntity<List<Provider>> getTripDeals(@RequestParam String userName, @RequestParam String attractionName) {
         if (userName.equals("")) {
             LOGGER.error("getTripDeals : userName is mandatory");
@@ -102,6 +123,7 @@ public class TourGuideController {
     	return new ResponseEntity<>(providers, HttpStatus.OK);
     }
 
+    @ApiOperation(value = "Update the preferences of a user from his username")
     @RequestMapping(method = RequestMethod.PUT, value = "/userPreferences")
     public ResponseEntity<User> updateUserPreference(@RequestParam String userName, @RequestBody UserPreferencesDTO userPreferences) {
         if (userName.equals("")) {
@@ -122,6 +144,7 @@ public class TourGuideController {
         }
     }
 
+    @ApiOperation(value = "Return the preferences of a user from his username")
     @RequestMapping(method = RequestMethod.GET, value = "/userPreferences")
     public ResponseEntity<UserPreferencesDTO> getUserPreference(@RequestParam String userName) {
         if (userName.equals("")) {

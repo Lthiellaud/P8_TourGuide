@@ -1,7 +1,6 @@
 package tourGuide.service;
 
 import gpsUtil.GpsUtil;
-import gpsUtil.location.VisitedLocation;
 import org.javamoney.moneta.Money;
 import org.junit.Test;
 import rewardCentral.RewardCentral;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 public class TestUserService {
 
 	@Test
-	public void getUserLocation() throws ExecutionException, InterruptedException {
+	public void getUserLocation() throws InterruptedException {
 		Locale englishLocale = new Locale("en", "EN");
 		Locale.setDefault(englishLocale);
 		GpsUtil gpsUtil = new GpsUtil();

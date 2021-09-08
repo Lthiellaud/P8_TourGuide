@@ -62,6 +62,10 @@ public class UserService {
 	public VisitedLocation getUserLocation(String userName) throws InterruptedException {
 		User user = getUser(userName);
 
+		if (user == null) {
+			return null;
+		}
+
 		if (user.getVisitedLocations().size() == 0) {
 			CountDownLatch trackLatch = new CountDownLatch( 1 );
 			gpsService.trackUserLocation(user, trackLatch);

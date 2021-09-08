@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,7 +36,7 @@ public class TestGpsService {
     }
 
     @Test
-    public void trackUser() throws ExecutionException, InterruptedException {
+    public void trackUser() throws InterruptedException {
         Locale englishLocale = new Locale("en", "EN");
         Locale.setDefault(englishLocale);
         GpsUtil gpsUtil = new GpsUtil();
@@ -55,6 +54,7 @@ public class TestGpsService {
         userService.tracker.stopTracking();
 
         assertEquals(user.getUserId(), userService.getLastVisitedLocation(user).userId);
+        assertEquals(user.getVisitedLocations().size(), 1);
     }
 
 
