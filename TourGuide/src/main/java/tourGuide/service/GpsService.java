@@ -26,7 +26,7 @@ public class GpsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     
-    ExecutorService executorGps = Executors.newFixedThreadPool(150);
+    ExecutorService executorGps = Executors.newFixedThreadPool(125);
 
     //TODO rename GpsService to LocationService
     //TODO move getAllCurrentLocation from UserService to LocationService
