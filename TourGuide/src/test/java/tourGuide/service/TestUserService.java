@@ -110,6 +110,8 @@ public class TestUserService {
 
 		List<UserCurrentLocationDTO> userCurrentLocationDTOs = userService.getAllCurrentLocations();
 
+		userService.tracker.stopTracking();
+
 		assertEquals(4,userCurrentLocationDTOs.size());
 	}
 
@@ -122,6 +124,8 @@ public class TestUserService {
 		UserService userService = new UserService(gpsService);
 
 		UserPreferencesDTO userPreferencesDTO = userService.getUserPreferences("internalUser2");
+
+		userService.tracker.stopTracking();
 
 		assertEquals(-1, userPreferencesDTO.getAttractionProximity());
 
@@ -136,6 +140,8 @@ public class TestUserService {
 		UserService userService = new UserService(gpsService);
 
 		UserPreferencesDTO userPreferencesDTO = userService.getUserPreferences("internalUser0");
+
+		userService.tracker.stopTracking();
 
 		assertEquals(Integer.MAX_VALUE, userPreferencesDTO.getAttractionProximity());
 		assertEquals(1,userPreferencesDTO.getTripDuration());
@@ -166,6 +172,8 @@ public class TestUserService {
 		userPreferences.setTicketQuantity((5));
 
 		User user = userService.updateUserPreferences("internalUser0", userPreferences);
+
+		userService.tracker.stopTracking();
 
 		UserPreferences newUserPreferences = user.getUserPreferences();
 		assertEquals(7,newUserPreferences.getTripDuration());
