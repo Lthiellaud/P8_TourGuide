@@ -1,5 +1,6 @@
 package tourGuide.service;
 
+import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
 import org.javamoney.moneta.Money;
@@ -7,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.tracker.Tracker;
@@ -21,8 +23,10 @@ import javax.money.UnknownCurrencyException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -30,12 +34,17 @@ import java.util.stream.IntStream;
 public class UserService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 	private final GpsService gpsService;
+	private final RewardsService rewardsService;
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
-	
-	public UserService(GpsService gpsService) {
+
+	ExecutorService executorGps = Executors.newFixedThreadPool(125);
+
+
+	public UserService(GpsService gpsService, RewardsService rewardsService) {
 		this.gpsService = gpsService;
+		this.rewardsService = rewardsService;
 
 		if(testMode) {
 			LOGGER.info("TestMode enabled");
@@ -68,13 +77,32 @@ public class UserService {
 
 		if (user.getVisitedLocations().size() == 0) {
 			CountDownLatch trackLatch = new CountDownLatch( 1 );
-			gpsService.trackUserLocation(user, trackLatch);
+			getNewUserLocation(user, trackLatch);
 			trackLatch.await();
 		}
 
 		return getLastVisitedLocation(user);
 	}
-	
+
+	public void getNewUserLocation(User user, CountDownLatch trackLatch) {
+		CompletableFuture.supplyAsync(() -> gpsService.getUserLocation(user), executorGps)
+				.thenAccept(loc -> updateUserVisitedLocationData(loc, user, trackLatch));
+
+	}
+	public void updateUserVisitedLocationData (VisitedLocation loc, User user, CountDownLatch trackLatch) {
+
+//        System.out.println(Thread.currentThread() + " - " + user.getUserName()
+//                + " - loc : " + loc.location.longitude + ", " + loc.location.latitude);
+		user.addToVisitedLocations(loc);
+		rewardsService.calculateRewards(user);
+		// one user updated
+		trackLatch.countDown();
+
+//        System.out.println(Thread.currentThread() + " - " + user.getUserName()
+//                + " - loc : " + loc.location.longitude + ", " + loc.location.latitude);
+
+	}
+
 	public User getUser(String userName) {
 		return internalUserMap.get(userName);
 	}
@@ -162,6 +190,61 @@ public class UserService {
 
 		}
 		return userPreferencesDTO;
+	}
+
+	public List<ClosestAttractionDTO> getNearByAttractions(VisitedLocation visitedLocation) {
+		List<Attraction> attractions = gpsService.getAttractionsList();
+
+//		logger.debug("Visited location : " + visitedLocation.location.longitude + " - " + visitedLocation.location.latitude);
+//		for (Attraction attraction : attractions) {
+//			logger.debug("Attraction " + attraction.attractionName + " distance : "
+//					+ rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location));
+//		}
+
+		List<ClosestAttractionDTO> closestAttractionDTOs = attractions.parallelStream()
+				//Create a ClosestAttractionDTO form an Attraction, calculating the distance Attraction/User
+				.map(attraction -> new ClosestAttractionDTO(attraction.attractionName,
+						new Location(attraction.latitude, attraction.longitude),
+						rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location)
+						,attraction.attractionId))
+				//Sort the ClosestAttractionDTOs from the nearest to the farthest
+				.sorted(Comparator.comparing(ClosestAttractionDTO::getDistance))
+				//take the 5 nearest
+				.limit(5)
+				.collect(Collectors.toList());
+
+		closestAttractionDTOs = closestAttractionDTOs.parallelStream()
+				.peek(attraction -> {attraction.setVisitedLocation(visitedLocation.location);
+					attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(), visitedLocation.userId));
+				})
+				.collect(Collectors.toList());
+
+//		for (ClosestAttractionDTO attraction : closestAttractionDTOs) {
+//			attraction.setVisitedLocation(visitedLocation.location);
+//			attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(),
+//					visitedLocation.userId));
+//			logger.debug("Attraction " + attraction.getAttractionName() + " - "
+//						+ attraction.getAttractionLocation().latitude +  " - "
+//						+ attraction.getAttractionLocation().longitude +  " - "
+//						+ visitedLocation.location.latitude +  " - "
+//						+ visitedLocation.location.longitude +  " - "
+//						+ attraction.getDistance());
+//		}
+
+//		closestAttractionDTOs.forEach( attraction -> {
+//					attraction.setVisitedLocation(visitedLocation.location);
+//					attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(),
+//							visitedLocation.userId));
+//					logger.debug("Attraction " + attraction.getAttractionName() + " - "
+//							+ attraction.getAttractionLocation().latitude + " - "
+//							+ attraction.getAttractionLocation().longitude + " - "
+//							+ visitedLocation.location.latitude + " - "
+//							+ visitedLocation.location.longitude + " - "
+//							+ attraction.getDistance());
+//				}
+//		);
+
+		return closestAttractionDTOs;
 	}
 
 	/**********************************************************************************

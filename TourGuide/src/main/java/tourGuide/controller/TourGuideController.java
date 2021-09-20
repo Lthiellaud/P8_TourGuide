@@ -31,9 +31,6 @@ public class TourGuideController {
     @Autowired
     UserService userService;
 
-    @Autowired
-    GpsService gpsService;
-
     @ApiOperation(value = "TourGuide home")
     @RequestMapping(method = RequestMethod.GET, value="/")
     public String index() {
@@ -76,7 +73,7 @@ public class TourGuideController {
                 LOGGER.error("getNearbyAttractions : user not found");
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
-            return new ResponseEntity<>(gpsService.getNearByAttractions(visitedLocation), HttpStatus.OK);
+            return new ResponseEntity<>(userService.getNearByAttractions(visitedLocation), HttpStatus.OK);
         } catch (InterruptedException e) {
             LOGGER.error("getNearbyAttractions - Error during retrieving user location");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
