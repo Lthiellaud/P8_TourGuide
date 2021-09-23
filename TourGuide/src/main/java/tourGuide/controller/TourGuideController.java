@@ -1,24 +1,23 @@
 package tourGuide.controller;
 
-import gpsUtil.location.Location;
-import gpsUtil.location.VisitedLocation;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tourGuide.beans.LocationBean;
+import tourGuide.beans.VisitedLocationBean;
 import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.model.DTO.UserPreferencesDTO;
-import tourGuide.service.GpsService;
 import tourGuide.service.UserService;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
 import tripPricer.Provider;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import javax.money.UnknownCurrencyException;
 import java.util.List;
 
@@ -39,14 +38,14 @@ public class TourGuideController {
 
     @ApiOperation(value = "Return the location of a user from his username")
     @RequestMapping(method = RequestMethod.GET, value="/getLocation")
-    public ResponseEntity<Location> getLocation(@RequestParam String userName) {
+    public ResponseEntity<LocationBean> getLocation(@RequestParam String userName) {
         if (userName.equals("")) {
             LOGGER.error("getLocation : userName is mandatory");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         try {
-            VisitedLocation visitedLocation = userService.getUserLocation(userName);
+            VisitedLocationBean visitedLocation = userService.getUserLocation(userName);
             if (visitedLocation == null) {
                 LOGGER.error("getLocation : user not found");
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -68,7 +67,7 @@ public class TourGuideController {
         }
 
         try {
-            VisitedLocation visitedLocation = userService.getUserLocation(userName);
+            VisitedLocationBean visitedLocation = userService.getUserLocation(userName);
             if (visitedLocation == null) {
                 LOGGER.error("getNearbyAttractions : user not found");
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);

@@ -1,12 +1,13 @@
 package tourGuide.model.DTO;
 
 import gpsUtil.location.Location;
+import tourGuide.beans.LocationBean;
 
 public class UserCurrentLocationDTO {
     private String userUUID;
-    private Location userLocation;
+    private LocationBean userLocation;
 
-    public UserCurrentLocationDTO(String userUUID, Location userLocation) {
+    public UserCurrentLocationDTO(String userUUID, LocationBean userLocation) {
         this.userUUID = userUUID;
         this.userLocation = userLocation;
     }
@@ -15,7 +16,7 @@ public class UserCurrentLocationDTO {
         return userUUID;
     }
 
-    public Location getUserLocation() {
+    public LocationBean getUserLocation() {
         return userLocation;
     }
 }

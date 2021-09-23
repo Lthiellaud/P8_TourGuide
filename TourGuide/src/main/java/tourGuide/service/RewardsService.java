@@ -1,10 +1,13 @@
 package tourGuide.service;
 
 import gpsUtil.location.Attraction;
-import gpsUtil.location.Location;
-import gpsUtil.location.VisitedLocation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
+import tourGuide.beans.AttractionBean;
+import tourGuide.beans.LocationBean;
+import tourGuide.beans.VisitedLocationBean;
+import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
 
@@ -20,13 +23,14 @@ public class RewardsService {
 	private int defaultProximityBuffer = 10;
 	private int proximityBuffer = defaultProximityBuffer;
 	private int attractionProximityRange = 200;
-	private final GpsService gpsService;
+	@Autowired
+	private final GpsMicroserviceProxy gpsMicroserviceProxy;
 	private final RewardCentral rewardsCentral;
 
 	//TODO improve performances ??
 
-	public RewardsService(GpsService gpsService, RewardCentral rewardCentral) {
-		this.gpsService = gpsService;
+	public RewardsService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardCentral rewardCentral) {
+		this.gpsMicroserviceProxy = gpsMicroserviceProxy;
 		this.rewardsCentral = rewardCentral;
 	}
 
@@ -39,9 +43,9 @@ public class RewardsService {
 	}
 
 	public void calculateRewards(User user) {
-		CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
+		CopyOnWriteArrayList<VisitedLocationBean> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
 
-		List<Attraction> attractions = gpsService.getAttractionsList();
+		List<AttractionBean> attractions = gpsMicroserviceProxy.getAttractionsList();
 
 		attractions.forEach(attraction -> {
 			if(user.getUserRewards().parallelStream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
@@ -69,7 +73,7 @@ public class RewardsService {
 
 	}
 
-	public int getRewardPoints(Attraction attraction, User user) {
+	public int getRewardPoints(AttractionBean attraction, User user) {
 		return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
 	}
 
@@ -77,15 +81,15 @@ public class RewardsService {
 		return rewardsCentral.getAttractionRewardPoints(attractionId, userId);
 	}
 
-	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
+	public boolean isWithinAttractionProximity(AttractionBean attraction, LocationBean location) {
 		return !(getDistance(attraction, location) > attractionProximityRange);
 	}
 
-	private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
+	private boolean nearAttraction(VisitedLocationBean visitedLocation, AttractionBean attraction) {
 		return !(getDistance(attraction, visitedLocation.location) > proximityBuffer);
 	}
 
-	public double getDistance(Location loc1, Location loc2) {
+	public double getDistance(LocationBean loc1, LocationBean loc2) {
 		double lat1 = Math.toRadians(loc1.latitude);
 		double lon1 = Math.toRadians(loc1.longitude);
 		double lat2 = Math.toRadians(loc2.latitude);

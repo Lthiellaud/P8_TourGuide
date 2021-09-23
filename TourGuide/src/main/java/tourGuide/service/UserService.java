@@ -1,16 +1,19 @@
 package tourGuide.service;
 
 import gpsUtil.location.Attraction;
-import gpsUtil.location.Location;
-import gpsUtil.location.VisitedLocation;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tourGuide.beans.AttractionBean;
+import tourGuide.beans.LocationBean;
+import tourGuide.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.model.DTO.UserPreferencesDTO;
+import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
@@ -33,7 +36,8 @@ import java.util.stream.IntStream;
 @Service
 public class UserService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
-	private final GpsService gpsService;
+	@Autowired
+	private final GpsMicroserviceProxy gpsMicroserviceProxy;
 	private final RewardsService rewardsService;
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
@@ -42,8 +46,8 @@ public class UserService {
 	ExecutorService executorGps = Executors.newFixedThreadPool(125);
 
 
-	public UserService(GpsService gpsService, RewardsService rewardsService) {
-		this.gpsService = gpsService;
+	public UserService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsService rewardsService) {
+		this.gpsMicroserviceProxy = gpsMicroserviceProxy;
 		this.rewardsService = rewardsService;
 
 		if(testMode) {
@@ -52,7 +56,7 @@ public class UserService {
 			initializeInternalUsers();
 			LOGGER.debug("Finished initializing users");
 		}
-		tracker = new Tracker(this, gpsService);
+		tracker = new Tracker(this, gpsMicroserviceProxy);
 		addShutDownHook();
 	}
 	
@@ -60,7 +64,7 @@ public class UserService {
 		return getUser(userName).getUserRewards();
 	}
 
-	public VisitedLocation getLastVisitedLocation(User user) {
+	public VisitedLocationBean getLastVisitedLocation(User user) {
 		int locationNumber = user.getVisitedLocations().size()-1;
 		if (locationNumber < 0) {
 			return null;
@@ -68,7 +72,7 @@ public class UserService {
 		return user.getVisitedLocations().get(locationNumber);
 	}
 
-	public VisitedLocation getUserLocation(String userName) throws InterruptedException {
+	public VisitedLocationBean getUserLocation(String userName) throws InterruptedException {
 		User user = getUser(userName);
 
 		if (user == null) {
@@ -85,11 +89,11 @@ public class UserService {
 	}
 
 	public void getNewUserLocation(User user, CountDownLatch trackLatch) {
-		CompletableFuture.supplyAsync(() -> gpsService.getUserLocation(user), executorGps)
+		CompletableFuture.supplyAsync(() -> gpsMicroserviceProxy.getUserLocation(user.getUserId()), executorGps)
 				.thenAccept(loc -> updateUserVisitedLocationData(loc, user, trackLatch));
 
 	}
-	public void updateUserVisitedLocationData (VisitedLocation loc, User user, CountDownLatch trackLatch) {
+	public void updateUserVisitedLocationData (VisitedLocationBean loc, User user, CountDownLatch trackLatch) {
 
 //        System.out.println(Thread.currentThread() + " - " + user.getUserName()
 //                + " - loc : " + loc.location.longitude + ", " + loc.location.latitude);
@@ -192,8 +196,8 @@ public class UserService {
 		return userPreferencesDTO;
 	}
 
-	public List<ClosestAttractionDTO> getNearByAttractions(VisitedLocation visitedLocation) {
-		List<Attraction> attractions = gpsService.getAttractionsList();
+	public List<ClosestAttractionDTO> getNearByAttractions(VisitedLocationBean visitedLocation) {
+		List<AttractionBean> attractions = gpsMicroserviceProxy.getAttractionsList();
 
 //		logger.debug("Visited location : " + visitedLocation.location.longitude + " - " + visitedLocation.location.latitude);
 //		for (Attraction attraction : attractions) {
@@ -204,8 +208,8 @@ public class UserService {
 		List<ClosestAttractionDTO> closestAttractionDTOs = attractions.parallelStream()
 				//Create a ClosestAttractionDTO form an Attraction, calculating the distance Attraction/User
 				.map(attraction -> new ClosestAttractionDTO(attraction.attractionName,
-						new Location(attraction.latitude, attraction.longitude),
-						rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location)
+						new LocationBean(attraction.latitude, attraction.longitude),
+						rewardsService.getDistance(new LocationBean(attraction.latitude, attraction.longitude), visitedLocation.location)
 						,attraction.attractionId))
 				//Sort the ClosestAttractionDTOs from the nearest to the farthest
 				.sorted(Comparator.comparing(ClosestAttractionDTO::getDistance))
@@ -270,7 +274,7 @@ public class UserService {
 	
 	private void generateUserLocationHistory(User user) {
 		IntStream.range(0, 3).forEach(i-> {
-			user.addToVisitedLocations(new VisitedLocation(user.getUserId(), new Location(generateRandomLatitude(), generateRandomLongitude()), getRandomTime()));
+			user.addToVisitedLocations(new VisitedLocationBean(user.getUserId(), new LocationBean(generateRandomLatitude(), generateRandomLongitude()), getRandomTime()));
 		});
 	}
 	
