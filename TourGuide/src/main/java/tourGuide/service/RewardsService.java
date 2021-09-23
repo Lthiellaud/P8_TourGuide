@@ -1,13 +1,12 @@
 package tourGuide.service;
 
-import gpsUtil.location.Attraction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import rewardCentral.RewardCentral;
 import tourGuide.beans.AttractionBean;
 import tourGuide.beans.LocationBean;
 import tourGuide.beans.VisitedLocationBean;
 import tourGuide.proxies.GpsMicroserviceProxy;
+import tourGuide.proxies.RewardsMicroserviceProxy;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
 
@@ -25,13 +24,14 @@ public class RewardsService {
 	private int attractionProximityRange = 200;
 	@Autowired
 	private final GpsMicroserviceProxy gpsMicroserviceProxy;
-	private final RewardCentral rewardsCentral;
+	@Autowired
+	private final RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
 	//TODO improve performances ??
 
-	public RewardsService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardCentral rewardCentral) {
+	public RewardsService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsMicroserviceProxy rewardsMicroserviceProxy) {
 		this.gpsMicroserviceProxy = gpsMicroserviceProxy;
-		this.rewardsCentral = rewardCentral;
+		this.rewardsMicroserviceProxy = rewardsMicroserviceProxy;
 	}
 
 	public void setProximityBuffer(int proximityBuffer) {
@@ -74,11 +74,11 @@ public class RewardsService {
 	}
 
 	public int getRewardPoints(AttractionBean attraction, User user) {
-		return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
+		return rewardsMicroserviceProxy.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
 	}
 
 	public int getRewardCentralPoints(UUID attractionId, UUID userId) {
-		return rewardsCentral.getAttractionRewardPoints(attractionId, userId);
+		return rewardsMicroserviceProxy.getAttractionRewardPoints(attractionId, userId);
 	}
 
 	public boolean isWithinAttractionProximity(AttractionBean attraction, LocationBean location) {

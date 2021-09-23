@@ -4,11 +4,11 @@ import org.javamoney.moneta.Money;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import rewardCentral.RewardCentral;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.proxies.GpsMicroserviceProxy;
+import tourGuide.proxies.RewardsMicroserviceProxy;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
 import tripPricer.Provider;
@@ -28,11 +28,14 @@ public class TestUserService {
 	@Autowired
 	GpsMicroserviceProxy gpsMicroserviceProxy;
 
+	@Autowired
+	RewardsMicroserviceProxy rewardsMicroserviceProxy;
+
 	@Test
 	public void getUserLocation() throws InterruptedException {
 		Locale englishLocale = new Locale("en", "EN");
 		Locale.setDefault(englishLocale);
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(0);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
@@ -46,7 +49,7 @@ public class TestUserService {
 	
 	@Test
 	public void addUser() {
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(0);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
@@ -67,7 +70,7 @@ public class TestUserService {
 	
 	@Test
 	public void getAllUsers() {
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(0);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
@@ -87,7 +90,7 @@ public class TestUserService {
 	
 	@Test
 	public void getTripDeals() {
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(1);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
@@ -100,7 +103,7 @@ public class TestUserService {
 
 	@Test
 	public void getAllCurrentLocations() {
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(4);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
@@ -113,7 +116,7 @@ public class TestUserService {
 
 	@Test
 	public void getUserPreferencesNull() {
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(1);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
@@ -127,7 +130,7 @@ public class TestUserService {
 
 	@Test
 	public void getUserPreferences() {
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(1);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
@@ -147,7 +150,7 @@ public class TestUserService {
 
 	@Test
 	public void updateUserPreferences() {
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(1);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
