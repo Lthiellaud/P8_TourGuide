@@ -1,15 +1,14 @@
 package tourGuide;
 
-import gpsUtil.GpsUtil;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import rewardCentral.RewardCentral;
 import tourGuide.beans.AttractionBean;
 import tourGuide.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.proxies.GpsMicroserviceProxy;
+import tourGuide.proxies.RewardsMicroserviceProxy;
 import tourGuide.service.RewardsService;
 import tourGuide.service.UserService;
 import tourGuide.user.User;
@@ -46,13 +45,15 @@ public class TestPerformance {
 	@Autowired
 	GpsMicroserviceProxy gpsMicroserviceProxy;
 
+	@Autowired
+	RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
 	@Ignore
 	@Test
 	public void highVolumeTrackLocation() {
 		Locale englishLocale = new Locale("en", "EN");
 		Locale.setDefault(englishLocale);
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
 		InternalTestHelper.setInternalUserNumber(100000);
 		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
@@ -81,7 +82,7 @@ public class TestPerformance {
 	public void highVolumeGetRewards() {
 		Locale englishLocale = new Locale("en", "EN");
 		Locale.setDefault(englishLocale);
-		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 
 		// Users should be incremented up to 100,000, and test finishes within 20 minutes
 		InternalTestHelper.setInternalUserNumber(100000);
