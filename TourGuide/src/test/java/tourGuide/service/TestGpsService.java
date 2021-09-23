@@ -1,10 +1,11 @@
 package tourGuide.service;
 
-import gpsUtil.GpsUtil;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import rewardCentral.RewardCentral;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.ClosestAttractionDTO;
+import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.user.User;
 
 import java.util.List;
@@ -16,15 +17,16 @@ import static org.junit.Assert.assertEquals;
 
 public class TestGpsService {
 
+    @Autowired
+    GpsMicroserviceProxy gpsMicroserviceProxy;
+
     @Test
     public void getNearbyAttractions() throws InterruptedException {
         Locale englishLocale = new Locale("en", "EN");
         Locale.setDefault(englishLocale);
-        GpsUtil gpsUtil = new GpsUtil();
-        GpsService gpsService = new GpsService(gpsUtil);
-        RewardsService rewardsService = new RewardsService(gpsService, new RewardCentral());
+        RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
-        UserService userService = new UserService(gpsService, rewardsService);
+        UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         userService.addUser(user);
@@ -39,11 +41,9 @@ public class TestGpsService {
     public void trackUser() throws InterruptedException {
         Locale englishLocale = new Locale("en", "EN");
         Locale.setDefault(englishLocale);
-        GpsUtil gpsUtil = new GpsUtil();
-        GpsService gpsService = new GpsService(gpsUtil);
-        RewardsService rewardsService = new RewardsService(gpsService, new RewardCentral());
+        RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
-        UserService userService = new UserService(gpsService, rewardsService);
+        UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 

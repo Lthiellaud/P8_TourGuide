@@ -7,7 +7,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import tourGuide.service.GpsService;
+import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.service.UserService;
 import tourGuide.user.User;
 
@@ -16,12 +16,12 @@ public class Tracker extends Thread {
 	private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
 	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 	private final UserService userService;
-	private final GpsService gpsService;
+	private final GpsMicroserviceProxy gpsMicroserviceProxy;
 	private boolean stop = false;
 
-	public Tracker(UserService userService, GpsService gpsService) {
+	public Tracker(UserService userService, GpsMicroserviceProxy gpsMicroserviceProxy) {
 		this.userService = userService;
-		this.gpsService = gpsService;
+		this.gpsMicroserviceProxy = gpsMicroserviceProxy;
 		
 		executorService.submit(this);
 	}

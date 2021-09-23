@@ -1,11 +1,15 @@
 package tourGuide.service;
 
-import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
-import gpsUtil.location.VisitedLocation;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import rewardCentral.RewardCentral;
+import tourGuide.beans.AttractionBean;
+import tourGuide.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
 
@@ -18,22 +22,24 @@ import java.util.concurrent.CountDownLatch;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@SpringBootTest
 public class TestRewardsService {
+
+	@Autowired
+	GpsMicroserviceProxy gpsMicroserviceProxy;
 
 	@Test
 	public void userGetRewards() throws InterruptedException {
 		Locale englishLocale = new Locale("en", "EN");
 		Locale.setDefault(englishLocale);
-		GpsUtil gpsUtil = new GpsUtil();
-		GpsService gpsService = new GpsService(gpsUtil);
-		RewardsService rewardsService = new RewardsService(gpsService, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
 
 		InternalTestHelper.setInternalUserNumber(0);
-		UserService userService = new UserService(gpsService, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		Attraction attraction = gpsUtil.getAttractions().get(0);
-		user.addToVisitedLocations(new VisitedLocation(user.getUserId(), attraction, new Date()));
+		AttractionBean attraction = gpsMicroserviceProxy.getAttractionsList().get(0);
+		user.addToVisitedLocations(new VisitedLocationBean(user.getUserId(), attraction, new Date()));
 
 		CountDownLatch trackLatch = new CountDownLatch( 1 );
 		userService.getNewUserLocation(user, trackLatch);
@@ -46,29 +52,25 @@ public class TestRewardsService {
 	
 	@Test
 	public void isWithinAttractionProximity() {
-		GpsUtil gpsUtil = new GpsUtil();
-		GpsService gpsService = new GpsService(gpsUtil);
-		RewardsService rewardsService = new RewardsService(gpsService, new RewardCentral());
-		Attraction attraction = gpsUtil.getAttractions().get(0);
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
+		AttractionBean attraction = gpsMicroserviceProxy.getAttractionsList().get(0);
 		assertTrue(rewardsService.isWithinAttractionProximity(attraction, attraction));
 	}
 	
 	@Test
 	public void nearAllAttractions() {
-		GpsUtil gpsUtil = new GpsUtil();
-		GpsService gpsService = new GpsService(gpsUtil);
-		RewardsService rewardsService = new RewardsService(gpsService, new RewardCentral());
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, new RewardCentral());
 		rewardsService.setProximityBuffer(Integer.MAX_VALUE);
 
 		InternalTestHelper.setInternalUserNumber(1);
-		UserService userService = new UserService(gpsService, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
 
 		rewardsService.calculateRewards(userService.getAllUsers().get(0));
 
 		List<UserReward> userRewards = userService.getUserRewards(userService.getAllUsers().get(0).getUserName());
 		userService.tracker.stopTracking();
 
-		assertEquals(gpsUtil.getAttractions().size(), userRewards.size());
+		assertEquals(gpsMicroserviceProxy.getAttractionsList().size(), userRewards.size());
 	}
 	
 }
