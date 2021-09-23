@@ -6,14 +6,15 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import tourGuide.beans.ProviderBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
+import tourGuide.proxies.TripPricerMicroserviceProxy;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
-import tripPricer.Provider;
 
 import javax.money.Monetary;
 import java.util.List;
@@ -34,13 +35,16 @@ public class TestUserService {
 	@Autowired
 	RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
+	@Autowired
+	TripPricerMicroserviceProxy tripPricerMicroserviceProxy;
+
 	@Test
 	public void getUserLocation() throws InterruptedException {
 		Locale englishLocale = new Locale("en", "EN");
 		Locale.setDefault(englishLocale);
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(0);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		CountDownLatch trackLatch = new CountDownLatch( 1 );
@@ -54,7 +58,7 @@ public class TestUserService {
 	public void addUser() {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(0);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		User user2 = new User(UUID.randomUUID(), "jon2", "000", "jon2@tourGuide.com");
@@ -75,7 +79,7 @@ public class TestUserService {
 	public void getAllUsers() {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(0);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		User user2 = new User(UUID.randomUUID(), "jon2", "000", "jon2@tourGuide.com");
@@ -95,9 +99,9 @@ public class TestUserService {
 	public void getTripDeals() {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(1);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
-		List<Provider> providers = userService.getTripDeals("internalUser0", "Disneyland");
+		List<ProviderBean> providers = userService.getTripDeals("internalUser0", "Disneyland");
 		
 		userService.tracker.stopTracking();
 		
@@ -108,7 +112,7 @@ public class TestUserService {
 	public void getAllCurrentLocations() {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(4);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		List<UserCurrentLocationDTO> userCurrentLocationDTOs = userService.getAllCurrentLocations();
 
@@ -121,7 +125,7 @@ public class TestUserService {
 	public void getUserPreferencesNull() {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(1);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		UserPreferencesDTO userPreferencesDTO = userService.getUserPreferences("internalUser2");
 
@@ -135,7 +139,7 @@ public class TestUserService {
 	public void getUserPreferences() {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(1);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		UserPreferencesDTO userPreferencesDTO = userService.getUserPreferences("internalUser0");
 
@@ -155,7 +159,7 @@ public class TestUserService {
 	public void updateUserPreferences() {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(1);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		UserPreferencesDTO userPreferences = new UserPreferencesDTO();
 		userPreferences.setTripDuration(7);

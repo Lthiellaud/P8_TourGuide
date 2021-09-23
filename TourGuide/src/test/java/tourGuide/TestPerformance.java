@@ -12,6 +12,7 @@ import tourGuide.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
+import tourGuide.proxies.TripPricerMicroserviceProxy;
 import tourGuide.service.RewardsService;
 import tourGuide.service.UserService;
 import tourGuide.user.User;
@@ -53,6 +54,9 @@ public class TestPerformance {
 	@Autowired
 	RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
+	@Autowired
+	TripPricerMicroserviceProxy tripPricerMicroserviceProxy;
+
 	//@Ignore
 	@Test
 	public void highVolumeTrackLocation() {
@@ -61,7 +65,7 @@ public class TestPerformance {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
 		InternalTestHelper.setInternalUserNumber(100000);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		List<User> allUsers = userService.getAllUsers();
 
@@ -93,7 +97,8 @@ public class TestPerformance {
 		InternalTestHelper.setInternalUserNumber(100000);
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		AttractionBean attraction = gpsMicroserviceProxy.getAttractionsList().get(0);
 		List<User> allUsers = userService.getAllUsers();

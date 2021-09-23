@@ -9,6 +9,7 @@ import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
+import tourGuide.proxies.TripPricerMicroserviceProxy;
 import tourGuide.user.User;
 
 import java.util.List;
@@ -28,13 +29,17 @@ public class TestGpsService {
     @Autowired
     RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
+    @Autowired
+    TripPricerMicroserviceProxy tripPricerMicroserviceProxy;
+
     @Test
     public void getNearbyAttractions() throws InterruptedException {
         Locale englishLocale = new Locale("en", "EN");
         Locale.setDefault(englishLocale);
         RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
         InternalTestHelper.setInternalUserNumber(0);
-        UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+
+        UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         userService.addUser(user);
@@ -51,7 +56,7 @@ public class TestGpsService {
         Locale.setDefault(englishLocale);
         RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
         InternalTestHelper.setInternalUserNumber(0);
-        UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+        UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 

@@ -11,6 +11,7 @@ import tourGuide.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
+import tourGuide.proxies.TripPricerMicroserviceProxy;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
 
@@ -33,6 +34,9 @@ public class TestRewardsService {
 	@Autowired
 	RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
+	@Autowired
+	TripPricerMicroserviceProxy tripPricerMicroserviceProxy;
+
 	@Test
 	public void userGetRewards() throws InterruptedException {
 		Locale englishLocale = new Locale("en", "EN");
@@ -40,7 +44,8 @@ public class TestRewardsService {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 
 		InternalTestHelper.setInternalUserNumber(0);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		AttractionBean attraction = gpsMicroserviceProxy.getAttractionsList().get(0);
@@ -68,7 +73,7 @@ public class TestRewardsService {
 		rewardsService.setProximityBuffer(Integer.MAX_VALUE);
 
 		InternalTestHelper.setInternalUserNumber(1);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		rewardsService.calculateRewards(userService.getAllUsers().get(0));
 

@@ -27,8 +27,6 @@ public class RewardsService {
 	@Autowired
 	private final RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
-	//TODO improve performances ??
-
 	public RewardsService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsMicroserviceProxy rewardsMicroserviceProxy) {
 		this.gpsMicroserviceProxy = gpsMicroserviceProxy;
 		this.rewardsMicroserviceProxy = rewardsMicroserviceProxy;
