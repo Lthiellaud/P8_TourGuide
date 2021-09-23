@@ -3,7 +3,10 @@ package tourGuide;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 import tourGuide.beans.AttractionBean;
 import tourGuide.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
@@ -21,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class TestPerformance {
 	
 	/*
@@ -48,7 +53,7 @@ public class TestPerformance {
 	@Autowired
 	RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
-	@Ignore
+	//@Ignore
 	@Test
 	public void highVolumeTrackLocation() {
 		Locale englishLocale = new Locale("en", "EN");
@@ -77,7 +82,7 @@ public class TestPerformance {
 		assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
 	}
 
-	@Ignore
+	//@Ignore
 	@Test
 	public void highVolumeGetRewards() {
 		Locale englishLocale = new Locale("en", "EN");
