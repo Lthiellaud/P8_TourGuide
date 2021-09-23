@@ -17,7 +17,6 @@ import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.service.UserService;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
-import tripPricer.Provider;
 
 import javax.money.UnknownCurrencyException;
 import java.util.List;

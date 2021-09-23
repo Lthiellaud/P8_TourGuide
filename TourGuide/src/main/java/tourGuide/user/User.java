@@ -1,13 +1,12 @@
 package tourGuide.user;
 
+import tourGuide.beans.ProviderBean;
+import tourGuide.beans.VisitedLocationBean;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import tourGuide.beans.ProviderBean;
-import tourGuide.beans.VisitedLocationBean;
-import tripPricer.Provider;
 
 public class User {
 	private final UUID userId;
