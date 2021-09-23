@@ -1,6 +1,5 @@
 package tourGuide.service;
 
-import gpsUtil.location.Attraction;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,18 +7,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tourGuide.beans.AttractionBean;
 import tourGuide.beans.LocationBean;
+import tourGuide.beans.ProviderBean;
 import tourGuide.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.proxies.GpsMicroserviceProxy;
+import tourGuide.proxies.TripPricerMicroserviceProxy;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
 import tourGuide.user.UserReward;
-import tripPricer.Provider;
-import tripPricer.TripPricer;
 
 import javax.money.Monetary;
 import javax.money.UnknownCurrencyException;
@@ -37,18 +36,23 @@ import java.util.stream.IntStream;
 public class UserService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 	@Autowired
-	private final GpsMicroserviceProxy gpsMicroserviceProxy;
+	private GpsMicroserviceProxy gpsMicroserviceProxy;
+	@Autowired
+	private TripPricerMicroserviceProxy tripPricerMicroserviceProxy;
+
 	private final RewardsService rewardsService;
-	private final TripPricer tripPricer = new TripPricer();
+
 	public final Tracker tracker;
 	boolean testMode = true;
 
 	ExecutorService executorGps = Executors.newFixedThreadPool(125);
 
 
-	public UserService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsService rewardsService) {
+	public UserService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsService rewardsService,
+					   TripPricerMicroserviceProxy tripPricerMicroserviceProxy) {
 		this.gpsMicroserviceProxy = gpsMicroserviceProxy;
 		this.rewardsService = rewardsService;
+		this.tripPricerMicroserviceProxy = tripPricerMicroserviceProxy;
 
 		if(testMode) {
 			LOGGER.info("TestMode enabled");
@@ -121,13 +125,13 @@ public class UserService {
 		}
 	}
 	
-	public List<Provider> getTripDeals(String userName, String attractionName) {
+	public List<ProviderBean> getTripDeals(String userName, String attractionName) {
 		User user = getUser(userName);
 		//tripPricer.getPrice use attractionId and not UserId.
 		//We don't have the tools to retrieve attractionId from attractionName so I have let UserId ...
 
 		int cumulativeRewardPoints = user.getUserRewards().stream().mapToInt(UserReward::getRewardPoints).sum();
-		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(), 
+		List<ProviderBean> providers = tripPricerMicroserviceProxy.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(),
 				user.getUserPreferences().getNumberOfChildren(), user.getUserPreferences().getTripDuration(), cumulativeRewardPoints);
 		user.setTripDeals(providers);
 		return providers;

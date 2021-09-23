@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tourGuide.beans.LocationBean;
+import tourGuide.beans.ProviderBean;
 import tourGuide.beans.VisitedLocationBean;
 import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
@@ -16,7 +17,6 @@ import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.service.UserService;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
-import tripPricer.Provider;
 
 import javax.money.UnknownCurrencyException;
 import java.util.List;
@@ -104,7 +104,7 @@ public class TourGuideController {
     @ApiOperation(value = "Return for a userName, a list of 5 trips to go to a given " +
             "attraction with the pricing depending on his preferences")
     @RequestMapping(method = RequestMethod.GET, value="/getTripDeals")
-    public ResponseEntity<List<Provider>> getTripDeals(@RequestParam String userName, @RequestParam String attractionName) {
+    public ResponseEntity<List<ProviderBean>> getTripDeals(@RequestParam String userName, @RequestParam String attractionName) {
         if (userName.equals("")) {
             LOGGER.error("getTripDeals : userName is mandatory");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -115,7 +115,7 @@ public class TourGuideController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<Provider> providers = userService.getTripDeals(userName, attractionName);
+        List<ProviderBean> providers = userService.getTripDeals(userName, attractionName);
     	return new ResponseEntity<>(providers, HttpStatus.OK);
     }
 

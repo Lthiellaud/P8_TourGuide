@@ -1,12 +1,12 @@
 package tourGuide.user;
 
+import tourGuide.beans.ProviderBean;
+import tourGuide.beans.VisitedLocationBean;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import tourGuide.beans.VisitedLocationBean;
-import tripPricer.Provider;
 
 public class User {
 	private final UUID userId;
@@ -17,7 +17,7 @@ public class User {
 	private List<VisitedLocationBean> visitedLocations = new ArrayList<>();
 	private List<UserReward> userRewards = new ArrayList<>();
 	private UserPreferences userPreferences = new UserPreferences();
-	private List<Provider> tripDeals = new ArrayList<>();
+	private List<ProviderBean> tripDeals = new ArrayList<>();
 	public User(UUID userId, String userName, String phoneNumber, String emailAddress) {
 		this.userId = userId;
 		this.userName = userName;
@@ -87,11 +87,11 @@ public class User {
 		this.userPreferences = userPreferences;
 	}
 
-	public void setTripDeals(List<Provider> tripDeals) {
+	public void setTripDeals(List<ProviderBean> tripDeals) {
 		this.tripDeals = tripDeals;
 	}
 	
-	public List<Provider> getTripDeals() {
+	public List<ProviderBean> getTripDeals() {
 		return tripDeals;
 	}
 

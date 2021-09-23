@@ -3,12 +3,16 @@ package tourGuide;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 import tourGuide.beans.AttractionBean;
 import tourGuide.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
+import tourGuide.proxies.TripPricerMicroserviceProxy;
 import tourGuide.service.RewardsService;
 import tourGuide.service.UserService;
 import tourGuide.user.User;
@@ -21,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class TestPerformance {
 	
 	/*
@@ -48,7 +54,10 @@ public class TestPerformance {
 	@Autowired
 	RewardsMicroserviceProxy rewardsMicroserviceProxy;
 
-	@Ignore
+	@Autowired
+	TripPricerMicroserviceProxy tripPricerMicroserviceProxy;
+
+	//@Ignore
 	@Test
 	public void highVolumeTrackLocation() {
 		Locale englishLocale = new Locale("en", "EN");
@@ -56,7 +65,7 @@ public class TestPerformance {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
 		InternalTestHelper.setInternalUserNumber(100000);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		List<User> allUsers = userService.getAllUsers();
 
@@ -77,7 +86,7 @@ public class TestPerformance {
 		assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
 	}
 
-	@Ignore
+	//@Ignore
 	@Test
 	public void highVolumeGetRewards() {
 		Locale englishLocale = new Locale("en", "EN");
@@ -88,7 +97,8 @@ public class TestPerformance {
 		InternalTestHelper.setInternalUserNumber(100000);
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService);
+
+		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		AttractionBean attraction = gpsMicroserviceProxy.getAttractionsList().get(0);
 		List<User> allUsers = userService.getAllUsers();
