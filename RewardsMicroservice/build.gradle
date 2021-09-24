@@ -16,7 +16,7 @@ apply plugin: "jacoco"
 
 
 bootJar {
-    baseName = 'gps'
+    baseName = 'rewards'
     version =  '1.0.0'
 }
 
