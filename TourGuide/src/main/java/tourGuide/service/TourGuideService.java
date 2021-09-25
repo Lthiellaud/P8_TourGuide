@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
-public class UserService {
-	private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
+public class TourGuideService {
+	private static final Logger LOGGER = LoggerFactory.getLogger(TourGuideService.class);
 	@Autowired
 	private GpsMicroserviceProxy gpsMicroserviceProxy;
 	@Autowired
@@ -48,8 +48,8 @@ public class UserService {
 	ExecutorService executorGps = Executors.newFixedThreadPool(125);
 
 
-	public UserService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsService rewardsService,
-					   TripPricerMicroserviceProxy tripPricerMicroserviceProxy) {
+	public TourGuideService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsService rewardsService,
+                            TripPricerMicroserviceProxy tripPricerMicroserviceProxy) {
 		this.gpsMicroserviceProxy = gpsMicroserviceProxy;
 		this.rewardsService = rewardsService;
 		this.tripPricerMicroserviceProxy = tripPricerMicroserviceProxy;

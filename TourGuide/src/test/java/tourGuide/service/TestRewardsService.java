@@ -4,7 +4,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.test.context.junit4.SpringRunner;
 import tourGuide.beans.AttractionBean;
 import tourGuide.beans.VisitedLocationBean;
@@ -45,18 +44,18 @@ public class TestRewardsService {
 
 		InternalTestHelper.setInternalUserNumber(0);
 
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
+		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		AttractionBean attraction = gpsMicroserviceProxy.getAttractionsList().get(0);
 		user.addToVisitedLocations(new VisitedLocationBean(user.getUserId(), attraction, new Date()));
 
 		CountDownLatch trackLatch = new CountDownLatch( 1 );
-		userService.getNewUserLocation(user, trackLatch);
+		tourGuideService.getNewUserLocation(user, trackLatch);
 		trackLatch.await();
 
 		List<UserReward> userRewards = user.getUserRewards();
-		userService.tracker.stopTracking();
+		tourGuideService.tracker.stopTracking();
 		assertEquals(1, userRewards.size());
 	}
 	
@@ -73,12 +72,12 @@ public class TestRewardsService {
 		rewardsService.setProximityBuffer(Integer.MAX_VALUE);
 
 		InternalTestHelper.setInternalUserNumber(1);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
+		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
-		rewardsService.calculateRewards(userService.getAllUsers().get(0));
+		rewardsService.calculateRewards(tourGuideService.getAllUsers().get(0));
 
-		List<UserReward> userRewards = userService.getUserRewards(userService.getAllUsers().get(0).getUserName());
-		userService.tracker.stopTracking();
+		List<UserReward> userRewards = tourGuideService.getUserRewards(tourGuideService.getAllUsers().get(0).getUserName());
+		tourGuideService.tracker.stopTracking();
 
 		assertEquals(gpsMicroserviceProxy.getAttractionsList().size(), userRewards.size());
 	}

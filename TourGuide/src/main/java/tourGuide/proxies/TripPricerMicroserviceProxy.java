@@ -8,7 +8,7 @@ import tourGuide.beans.ProviderBean;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "TripPricerMicroservice", url = "localhost:9093")
+@FeignClient(name = "TripPricerMicroservice", url = "${feign.url.trippricer}")
 public interface TripPricerMicroserviceProxy {
 
     @GetMapping(value="/tripPrice")

@@ -11,7 +11,7 @@ import tourGuide.beans.VisitedLocationBean;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "GpsMicroservice", url = "localhost:9091")
+@FeignClient(name = "GpsMicroservice", url = "${feign.url.gps}")
 public interface GpsMicroserviceProxy {
 
     @GetMapping(value="/AttractionsList")

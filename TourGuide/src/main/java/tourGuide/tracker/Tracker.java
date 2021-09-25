@@ -8,19 +8,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tourGuide.proxies.GpsMicroserviceProxy;
-import tourGuide.service.UserService;
+import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
 
 public class Tracker extends Thread {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Tracker.class);
 	private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
 	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-	private final UserService userService;
+	private final TourGuideService tourGuideService;
 	private final GpsMicroserviceProxy gpsMicroserviceProxy;
 	private boolean stop = false;
 
-	public Tracker(UserService userService, GpsMicroserviceProxy gpsMicroserviceProxy) {
-		this.userService = userService;
+	public Tracker(TourGuideService tourGuideService, GpsMicroserviceProxy gpsMicroserviceProxy) {
+		this.tourGuideService = tourGuideService;
 		this.gpsMicroserviceProxy = gpsMicroserviceProxy;
 		
 		executorService.submit(this);
@@ -43,12 +43,12 @@ public class Tracker extends Thread {
 				break;
 			}
 			
-			List<User> users = userService.getAllUsers();
+			List<User> users = tourGuideService.getAllUsers();
 			CountDownLatch trackLatch = new CountDownLatch( users.size() );
 			LOGGER.debug("Begin Tracker. Tracking " + users.size() + " users.");
 			stopWatch.start();
 			try {
-				users.forEach(u -> userService.getNewUserLocation(u, trackLatch));
+				users.forEach(u -> tourGuideService.getNewUserLocation(u, trackLatch));
 				trackLatch.await();
 			} catch (InterruptedException e) {
 				LOGGER.error("getLocation - Error during retrieving user location");

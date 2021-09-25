@@ -39,13 +39,13 @@ public class TestGpsService {
         RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
         InternalTestHelper.setInternalUserNumber(0);
 
-        UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
+        TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-        userService.addUser(user);
-        List<ClosestAttractionDTO> closestAttractionDTOs = userService.getNearByAttractions(userService.getUserLocation("jon"));
+        tourGuideService.addUser(user);
+        List<ClosestAttractionDTO> closestAttractionDTOs = tourGuideService.getNearByAttractions(tourGuideService.getUserLocation("jon"));
 
-        userService.tracker.stopTracking();
+        tourGuideService.tracker.stopTracking();
 
         assertEquals(5, closestAttractionDTOs.size());
     }
@@ -56,17 +56,17 @@ public class TestGpsService {
         Locale.setDefault(englishLocale);
         RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
         InternalTestHelper.setInternalUserNumber(0);
-        UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
+        TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 
         CountDownLatch trackLatch = new CountDownLatch( 1 );
-        userService.getNewUserLocation(user, trackLatch);
+        tourGuideService.getNewUserLocation(user, trackLatch);
         trackLatch.await();
 
-        userService.tracker.stopTracking();
+        tourGuideService.tracker.stopTracking();
 
-        assertEquals(user.getUserId(), userService.getLastVisitedLocation(user).userId);
+        assertEquals(user.getUserId(), tourGuideService.getLastVisitedLocation(user).userId);
         assertEquals(user.getVisitedLocations().size(), 1);
     }
 
