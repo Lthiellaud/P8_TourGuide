@@ -6,15 +6,15 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import tourGuide.beans.AttractionBean;
-import tourGuide.beans.VisitedLocationBean;
+import tourGuide.model.beans.AttractionBean;
+import tourGuide.model.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
 import tourGuide.proxies.TripPricerMicroserviceProxy;
 import tourGuide.service.RewardsService;
 import tourGuide.service.TourGuideService;
-import tourGuide.user.User;
+import tourGuide.model.user.User;
 
 import java.util.Date;
 import java.util.List;
@@ -63,7 +63,7 @@ public class TestPerformance {
 		Locale.setDefault(englishLocale);
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
-		InternalTestHelper.setInternalUserNumber(100);
+		InternalTestHelper.setInternalUserNumber(100000);
 		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		List<User> allUsers = tourGuideService.getAllUsers();
@@ -93,7 +93,7 @@ public class TestPerformance {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 
 		// Users should be incremented up to 100,000, and test finishes within 20 minutes
-		InternalTestHelper.setInternalUserNumber(100);
+		InternalTestHelper.setInternalUserNumber(100000);
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 

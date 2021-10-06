@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.service.TourGuideService;
-import tourGuide.user.User;
+import tourGuide.model.user.User;
 
 public class Tracker extends Thread {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Tracker.class);

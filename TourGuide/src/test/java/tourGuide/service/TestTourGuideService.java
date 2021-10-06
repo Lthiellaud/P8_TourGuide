@@ -6,15 +6,15 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import tourGuide.beans.ProviderBean;
+import tourGuide.model.beans.ProviderBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.model.DTO.UserPreferencesDTO;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
 import tourGuide.proxies.TripPricerMicroserviceProxy;
-import tourGuide.user.User;
-import tourGuide.user.UserPreferences;
+import tourGuide.model.user.User;
+import tourGuide.model.user.UserPreferences;
 
 import javax.money.Monetary;
 import java.util.List;

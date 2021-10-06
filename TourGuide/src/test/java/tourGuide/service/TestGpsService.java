@@ -10,7 +10,7 @@ import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
 import tourGuide.proxies.TripPricerMicroserviceProxy;
-import tourGuide.user.User;
+import tourGuide.model.user.User;
 
 import java.util.List;
 import java.util.Locale;

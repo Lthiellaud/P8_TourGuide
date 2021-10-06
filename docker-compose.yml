@@ -1,7 +1,9 @@
 services:
 
   tourguide-app:
-    image: lth71/tourguide-app
+    build:
+      context: TourGuide
+      dockerfile: Dockerfile
     environment:
       - JAVA_OPTS=
         -DGPS_FEIGN_URL=gps-ms:9091
@@ -40,7 +42,6 @@ services:
       - 9093:9093
     networks:
       - tourguide-net
-
 
 networks:
   tourguide-net:

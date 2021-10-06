@@ -5,14 +5,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import tourGuide.beans.AttractionBean;
-import tourGuide.beans.VisitedLocationBean;
+import tourGuide.model.beans.AttractionBean;
+import tourGuide.model.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
 import tourGuide.proxies.TripPricerMicroserviceProxy;
-import tourGuide.user.User;
-import tourGuide.user.UserReward;
+import tourGuide.model.user.User;
+import tourGuide.model.user.UserReward;
 
 import java.util.Date;
 import java.util.List;
