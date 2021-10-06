@@ -1,21 +1,20 @@
 package tourGuide;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import tourGuide.beans.AttractionBean;
-import tourGuide.beans.VisitedLocationBean;
+import tourGuide.model.beans.AttractionBean;
+import tourGuide.model.beans.VisitedLocationBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
 import tourGuide.proxies.TripPricerMicroserviceProxy;
 import tourGuide.service.RewardsService;
-import tourGuide.service.UserService;
-import tourGuide.user.User;
+import tourGuide.service.TourGuideService;
+import tourGuide.model.user.User;
 
 import java.util.Date;
 import java.util.List;
@@ -65,22 +64,22 @@ public class TestPerformance {
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
 		InternalTestHelper.setInternalUserNumber(100000);
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
+		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
-		List<User> allUsers = userService.getAllUsers();
+		List<User> allUsers = tourGuideService.getAllUsers();
 
 		CountDownLatch trackLatch = new CountDownLatch( allUsers.size() );
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		try {
-			allUsers.forEach(user -> userService.getNewUserLocation(user, trackLatch));
+			allUsers.forEach(user -> tourGuideService.getNewUserLocation(user, trackLatch));
 			trackLatch.await();
 		} catch (InterruptedException e) {
 			System.out.println("getLocation - Error during retrieving user location");
 		}
 
 		stopWatch.stop();
-		userService.tracker.stopTracking();
+		tourGuideService.tracker.stopTracking();
 
 		System.out.println("highVolumeTrackLocation: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
 		assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
@@ -98,16 +97,16 @@ public class TestPerformance {
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
-		UserService userService = new UserService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
+		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		AttractionBean attraction = gpsMicroserviceProxy.getAttractionsList().get(0);
-		List<User> allUsers = userService.getAllUsers();
+		List<User> allUsers = tourGuideService.getAllUsers();
 		allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocationBean(u.getUserId(), attraction, new Date())));
 
 		CountDownLatch trackLatch = new CountDownLatch( allUsers.size() );
 
 		try {
-			allUsers.forEach(user -> userService.getNewUserLocation(user, trackLatch));
+			allUsers.forEach(user -> tourGuideService.getNewUserLocation(user, trackLatch));
 			trackLatch.await();
 		} catch (InterruptedException e) {
 			System.out.println("getLocation - Error during retrieving user location & rewards");
@@ -120,7 +119,7 @@ public class TestPerformance {
 		}
 
 		stopWatch.stop();
-		userService.tracker.stopTracking();
+		tourGuideService.tracker.stopTracking();
 
 		System.out.println("highVolumeGetRewards: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds."); 
 		assertTrue(TimeUnit.MINUTES.toSeconds(20) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));

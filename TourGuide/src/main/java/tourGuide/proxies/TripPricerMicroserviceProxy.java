@@ -3,12 +3,12 @@ package tourGuide.proxies;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import tourGuide.beans.ProviderBean;
+import tourGuide.model.beans.ProviderBean;
 
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "TripPricerMicroservice", url = "localhost:9093")
+@FeignClient(name = "TripPricerMicroservice", url = "${feign.url.trippricer}")
 public interface TripPricerMicroserviceProxy {
 
     @GetMapping(value="/tripPrice")

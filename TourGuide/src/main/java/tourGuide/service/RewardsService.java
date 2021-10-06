@@ -2,13 +2,13 @@ package tourGuide.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tourGuide.beans.AttractionBean;
-import tourGuide.beans.LocationBean;
-import tourGuide.beans.VisitedLocationBean;
+import tourGuide.model.beans.AttractionBean;
+import tourGuide.model.beans.LocationBean;
+import tourGuide.model.beans.VisitedLocationBean;
 import tourGuide.proxies.GpsMicroserviceProxy;
 import tourGuide.proxies.RewardsMicroserviceProxy;
-import tourGuide.user.User;
-import tourGuide.user.UserReward;
+import tourGuide.model.user.User;
+import tourGuide.model.user.UserReward;
 
 import java.util.List;
 import java.util.UUID;

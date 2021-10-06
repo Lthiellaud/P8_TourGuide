@@ -8,15 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tourGuide.beans.LocationBean;
-import tourGuide.beans.ProviderBean;
-import tourGuide.beans.VisitedLocationBean;
+import tourGuide.model.beans.LocationBean;
+import tourGuide.model.beans.ProviderBean;
+import tourGuide.model.beans.VisitedLocationBean;
 import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
 import tourGuide.model.DTO.UserPreferencesDTO;
-import tourGuide.service.UserService;
-import tourGuide.user.User;
-import tourGuide.user.UserReward;
+import tourGuide.service.TourGuideService;
+import tourGuide.model.user.User;
+import tourGuide.model.user.UserReward;
 
 import javax.money.UnknownCurrencyException;
 import java.util.List;
@@ -25,10 +25,10 @@ import java.util.List;
 @RestController
 public class TourGuideController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TourGuideService.class);
 
     @Autowired
-    UserService userService;
+    TourGuideService tourGuideService;
 
     @ApiOperation(value = "TourGuide home")
     @RequestMapping(method = RequestMethod.GET, value="/")
@@ -45,7 +45,7 @@ public class TourGuideController {
         }
 
         try {
-            VisitedLocationBean visitedLocation = userService.getUserLocation(userName);
+            VisitedLocationBean visitedLocation = tourGuideService.getUserLocation(userName);
             if (visitedLocation == null) {
                 LOGGER.error("getLocation : user not found");
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -67,12 +67,12 @@ public class TourGuideController {
         }
 
         try {
-            VisitedLocationBean visitedLocation = userService.getUserLocation(userName);
+            VisitedLocationBean visitedLocation = tourGuideService.getUserLocation(userName);
             if (visitedLocation == null) {
                 LOGGER.error("getNearbyAttractions : user not found");
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
-            return new ResponseEntity<>(userService.getNearByAttractions(visitedLocation), HttpStatus.OK);
+            return new ResponseEntity<>(tourGuideService.getNearByAttractions(visitedLocation), HttpStatus.OK);
         } catch (InterruptedException e) {
             LOGGER.error("getNearbyAttractions - Error during retrieving user location");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -87,18 +87,18 @@ public class TourGuideController {
             LOGGER.error("getRewards : userName is mandatory");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        if (userService.getUser(userName) == null) {
+        if (tourGuideService.getUser(userName) == null) {
             LOGGER.error("getRewards : user not found");
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(userService.getUserRewards(userName), HttpStatus.OK);
+        return new ResponseEntity<>(tourGuideService.getUserRewards(userName), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Return the current location of all connected users")
     @RequestMapping(method = RequestMethod.GET, value="/getAllCurrentLocations")
     public ResponseEntity<List<UserCurrentLocationDTO>> getAllCurrentLocations() {
-    	return  new ResponseEntity<>(userService.getAllCurrentLocations(), HttpStatus.OK);
+    	return  new ResponseEntity<>(tourGuideService.getAllCurrentLocations(), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Return for a userName, a list of 5 trips to go to a given " +
@@ -115,7 +115,7 @@ public class TourGuideController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<ProviderBean> providers = userService.getTripDeals(userName, attractionName);
+        List<ProviderBean> providers = tourGuideService.getTripDeals(userName, attractionName);
     	return new ResponseEntity<>(providers, HttpStatus.OK);
     }
 
@@ -128,7 +128,7 @@ public class TourGuideController {
         }
 
         try {
-            User user = userService.updateUserPreferences(userName, userPreferences);
+            User user = tourGuideService.updateUserPreferences(userName, userPreferences);
             if (user == null) {
                 LOGGER.error("PUT UserPreferences : userName does not exist");
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -147,7 +147,7 @@ public class TourGuideController {
             LOGGER.error("GET UserPreferences : userName is mandatory");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        UserPreferencesDTO userPreferences = userService.getUserPreferences(userName);
+        UserPreferencesDTO userPreferences = tourGuideService.getUserPreferences(userName);
         if (userPreferences.getAttractionProximity() == -1) {
             LOGGER.error("GET UserPreferences : userName does not exist");
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

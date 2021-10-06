@@ -1,0 +1,47 @@
+services:
+
+  tourguide-app:
+    build:
+      context: TourGuide
+      dockerfile: Dockerfile
+    environment:
+      - JAVA_OPTS=
+        -DGPS_FEIGN_URL=gps-ms:9091
+        -DREWARDS_FEIGN_URL=reward-ms:9092
+        -DTRIP_PRICER_FEIGN_URL=trippricer-ms:9093
+    container_name: tourguide-app
+    depends_on:
+      - gps-ms
+      - reward-ms
+      - trippricer-ms
+    ports:
+      - 9090:9090
+    networks:
+      - tourguide-net
+
+  gps-ms:
+    image: lth71/gps-microservice
+    container_name: gps-ms
+    ports:
+      - 9091:9091
+    networks:
+      - tourguide-net
+
+  reward-ms:
+    image: lth71/reward-microservice
+    container_name: reward-ms
+    ports:
+      - 9092:9092
+    networks:
+      - tourguide-net
+
+  trippricer-ms:
+    image: lth71/trippricer-microservice
+    container_name: trippricer-ms
+    ports:
+      - 9093:9093
+    networks:
+      - tourguide-net
+
+networks:
+  tourguide-net:

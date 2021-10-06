@@ -1,4 +1,4 @@
-package tourGuide.beans;
+package tourGuide.model.beans;
 
 import java.util.Date;
 import java.util.UUID;
