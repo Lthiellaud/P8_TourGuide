@@ -56,7 +56,6 @@ public class TestPerformance {
 	@Autowired
 	TripPricerMicroserviceProxy tripPricerMicroserviceProxy;
 
-	//@Ignore
 	@Test
 	public void highVolumeTrackLocation() {
 		Locale englishLocale = new Locale("en", "EN");
@@ -105,14 +104,13 @@ public class TestPerformance {
 
 		CountDownLatch trackLatch = new CountDownLatch( allUsers.size() );
 
+		// Calcul des rewards via le getNewUserLocation
 		try {
 			allUsers.forEach(user -> tourGuideService.getNewUserLocation(user, trackLatch));
 			trackLatch.await();
 		} catch (InterruptedException e) {
 			System.out.println("getLocation - Error during retrieving user location & rewards");
 		}
-
-//		allUsers.forEach(u -> rewardsService.calculateRewards(u));
 
 	    for(User user : allUsers) {
 			assertTrue(user.getUserRewards().size() > 0);

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import rewardCentral.RewardCentral;
+import rewards.exception.RewardsNotObtainedException;
 
 import java.util.UUID;
 
@@ -23,6 +24,10 @@ public class RewardsController {
     @GetMapping(value="/userRewardsPoint")
     public Integer getAttractionRewardPoints (@RequestParam UUID userId, @RequestParam UUID attractionId) {
         LOGGER.debug("rewardCentral call for " + userId + " for attraction "+ attractionId);
-        return rewardCentral.getAttractionRewardPoints(attractionId, userId);
+        Integer rewards = rewardCentral.getAttractionRewardPoints(attractionId, userId);
+        if (rewards == null) {
+            throw new RewardsNotObtainedException("RewardsMicroserice - Rewards not obtained");
+        }
+        return rewards;
     }
 }

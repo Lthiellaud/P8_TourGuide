@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import tourGuide.exception.NotFoundException;
 import tourGuide.model.beans.ProviderBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
@@ -101,7 +102,7 @@ public class TestTourGuideService {
 		InternalTestHelper.setInternalUserNumber(1);
 		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
-		List<ProviderBean> providers = tourGuideService.getTripDeals("internalUser0", "Disneyland");
+		List<ProviderBean> providers = tourGuideService.getTripDeals("internalUser0", UUID.randomUUID());
 		
 		tourGuideService.tracker.stopTracking();
 		
@@ -127,11 +128,12 @@ public class TestTourGuideService {
 		InternalTestHelper.setInternalUserNumber(1);
 		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
-		UserPreferencesDTO userPreferencesDTO = tourGuideService.getUserPreferences("internalUser2");
-
+		try {
+			tourGuideService.getUserPreferences("internalUser2");
+		} catch (NotFoundException e) {
+			assertEquals("user internalUser2 not found", e.getMessage());
+		}
 		tourGuideService.tracker.stopTracking();
-
-		assertEquals(-1, userPreferencesDTO.getAttractionProximity());
 
 	}
 

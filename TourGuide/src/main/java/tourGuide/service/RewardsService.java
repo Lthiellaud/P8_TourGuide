@@ -40,6 +40,10 @@ public class RewardsService {
 		proximityBuffer = defaultProximityBuffer;
 	}
 
+	/**
+	 * Update user rewards from his visited location list
+	 * @param user
+	 */
 	public void calculateRewards(User user) {
 		CopyOnWriteArrayList<VisitedLocationBean> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
 
@@ -49,44 +53,60 @@ public class RewardsService {
 			if(user.getUserRewards().parallelStream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
 				userLocations.forEach( visitedLocation -> {
 					if(nearAttraction(visitedLocation, attraction)) {
-//						CompletableFuture.supplyAsync(() -> getRewardPoints(attraction, user))
-//								.thenAccept(points -> user.addUserReward(new UserReward(visitedLocation, attraction, points)));
 						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
 					}
 				});
 			}
 		});
 
-
-//		VisitedLocation lastUserLocation = user.getLastVisitedLocation();
-//		List<Attraction> attractions = gpsUtil.getAttractions();
-//
-//		attractions.forEach(attraction -> {
-//			if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
-//				if(nearAttraction(lastUserLocation, attraction)) {
-//					user.addUserReward(new UserReward(lastUserLocation, attraction, getRewardPoints(attraction, user)));
-//				}
-//			}
-//		});
-
 	}
 
+	/**
+	 * Give the number of reward points associated to a couple Attraction/User
+	 * @param attraction
+	 * @param user
+	 * @return the associated number of reward points
+	 */
 	public int getRewardPoints(AttractionBean attraction, User user) {
-		return rewardsMicroserviceProxy.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
+		return getRewardCentralPoints(attraction.attractionId, user.getUserId());
 	}
 
+	/**
+	 * Give the number of reward points associated to a couple Attraction/User from RewardsCentral
+	 * @param attractionId
+	 * @param userId
+	 * @return
+	 */
 	public int getRewardCentralPoints(UUID attractionId, UUID userId) {
 		return rewardsMicroserviceProxy.getAttractionRewardPoints(attractionId, userId);
 	}
 
+	/**
+	 * Return true if the distance between attraction and location is smaller than attractionProximityRange
+	 * @param attraction
+	 * @param location
+	 * @return
+	 */
 	public boolean isWithinAttractionProximity(AttractionBean attraction, LocationBean location) {
 		return !(getDistance(attraction, location) > attractionProximityRange);
 	}
 
+	/**
+	 * Return true if the distance between attraction and visited location is smaller than proximityBuffer
+	 * @param attraction
+	 * @param visitedLocation
+	 * @return
+	 */
 	private boolean nearAttraction(VisitedLocationBean visitedLocation, AttractionBean attraction) {
 		return !(getDistance(attraction, visitedLocation.location) > proximityBuffer);
 	}
 
+	/**
+	 * Calculate the distance between to locations
+	 * @param loc1
+	 * @param loc2
+	 * @return
+	 */
 	public double getDistance(LocationBean loc1, LocationBean loc2) {
 		double lat1 = Math.toRadians(loc1.latitude);
 		double lon1 = Math.toRadians(loc1.longitude);

@@ -12,10 +12,10 @@ import java.util.UUID;
 public interface TripPricerMicroserviceProxy {
 
     @GetMapping(value="/tripPrice")
-    List<ProviderBean> getPrice(@RequestParam String apiKey,
-                                @RequestParam ("attractionId") UUID attractionId,
-                                @RequestParam ("adults") int adults,
-                                @RequestParam ("children") int children,
-                                @RequestParam ("nightsStay") int nightsStay,
-                                @RequestParam ("rewardsPoints") int rewardsPoints);
+    List<ProviderBean> getProviderList(@RequestParam String apiKey,
+                                       @RequestParam ("attractionId") UUID attractionId,
+                                       @RequestParam ("adults") int adults,
+                                       @RequestParam ("children") int children,
+                                       @RequestParam ("nightsStay") int nightsStay,
+                                       @RequestParam ("rewardsPoints") int rewardsPoints);
 }

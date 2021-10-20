@@ -1,5 +1,6 @@
 package gps.controller;
 
+import gps.exception.NotFoundException;
 import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
@@ -28,14 +29,22 @@ public class GpsController {
     @GetMapping(value="/AttractionsList")
     public List<Attraction> getAttractionsList() {
         LOGGER.debug("GpsUtil - Attractions list sent");
-        return gpsUtil.getAttractions();
+        List<Attraction> attractions = gpsUtil.getAttractions();
+        if (attractions == null || attractions.isEmpty()) {
+            throw new NotFoundException("Attraction List not obtained");
+        }
+        return attractions;
     }
 
     @ApiOperation(value = "To get user Location")
     @GetMapping(value="/UserLocation")
     public VisitedLocation getUserLocation (@RequestParam UUID userId) {
         LOGGER.debug("GpsUtil call for " + userId);
-        return gpsUtil.getUserLocation(userId);
+        VisitedLocation visitedLocation = gpsUtil.getUserLocation(userId);
+        if (visitedLocation == null) {
+            throw new NotFoundException("User location not obtained");
+        }
+        return visitedLocation;
     }
     
 }

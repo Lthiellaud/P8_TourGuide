@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tourGuide.exception.NotFoundException;
 import tourGuide.model.beans.AttractionBean;
 import tourGuide.model.beans.LocationBean;
 import tourGuide.model.beans.ProviderBean;
@@ -21,7 +22,6 @@ import tourGuide.model.user.UserPreferences;
 import tourGuide.model.user.UserReward;
 
 import javax.money.Monetary;
-import javax.money.UnknownCurrencyException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -63,11 +63,21 @@ public class TourGuideService {
 		tracker = new Tracker(this, gpsMicroserviceProxy);
 		addShutDownHook();
 	}
-	
+
+	/**
+	 * Gives the user list of rewards
+	 * @param userName of the user
+	 * @return
+	 */
 	public List<UserReward> getUserRewards(String userName) {
 		return getUser(userName).getUserRewards();
 	}
 
+	/**
+	 * Gives the last visited location
+	 * @param user
+	 * @return
+	 */
 	public VisitedLocationBean getLastVisitedLocation(User user) {
 		int locationNumber = user.getVisitedLocations().size()-1;
 		if (locationNumber < 0) {
@@ -76,12 +86,14 @@ public class TourGuideService {
 		return user.getVisitedLocations().get(locationNumber);
 	}
 
+	/**
+	 * Gives the user location
+	 * @param userName of the user
+	 * @return the visited location
+	 * @throws InterruptedException
+	 */
 	public VisitedLocationBean getUserLocation(String userName) throws InterruptedException {
 		User user = getUser(userName);
-
-		if (user == null) {
-			return null;
-		}
 
 		if (user.getVisitedLocations().size() == 0) {
 			CountDownLatch trackLatch = new CountDownLatch( 1 );
@@ -92,54 +104,86 @@ public class TourGuideService {
 		return getLastVisitedLocation(user);
 	}
 
+	/**
+	 * Tracks a user to get a new visited Location
+	 * @param user ti be tracked
+	 * @param trackLatch countdown latch
+	 */
 	public void getNewUserLocation(User user, CountDownLatch trackLatch) {
 		CompletableFuture.supplyAsync(() -> gpsMicroserviceProxy.getUserLocation(user.getUserId()), executorGps)
 				.thenAccept(loc -> updateUserVisitedLocationData(loc, user, trackLatch));
 
 	}
+
+	/**
+	 * Updates a user (VisitedLocation + Rewards) when a new visited location is tracked
+	 * @param loc new visited location
+	 * @param user to be updated
+	 * @param trackLatch countdown latch
+	 */
 	public void updateUserVisitedLocationData (VisitedLocationBean loc, User user, CountDownLatch trackLatch) {
 
-//        System.out.println(Thread.currentThread() + " - " + user.getUserName()
-//                + " - loc : " + loc.location.longitude + ", " + loc.location.latitude);
 		user.addToVisitedLocations(loc);
 		rewardsService.calculateRewards(user);
 		// one user updated
 		trackLatch.countDown();
 
-//        System.out.println(Thread.currentThread() + " - " + user.getUserName()
-//                + " - loc : " + loc.location.longitude + ", " + loc.location.latitude);
-
 	}
 
+	/**
+	 * Gives a user from his userName
+	 * @param userName
+	 * @return
+	 */
 	public User getUser(String userName) {
-		return internalUserMap.get(userName);
+		User user = internalUserMap.get(userName);
+		if (user == null) {
+			throw new NotFoundException("user " + userName + " not found");
+		}
+
+		return user;
 	}
-	
+
+	/**
+	 * Gives all the users
+	 * @return
+	 */
 	public List<User> getAllUsers() {
 		return internalUserMap.values().stream().collect(Collectors.toList());
 	}
-	
+
+	/**
+	 * Add a user
+	 * @param user
+	 */
 	public void addUser(User user) {
 		if(!internalUserMap.containsKey(user.getUserName())) {
 			internalUserMap.put(user.getUserName(), user);
 		}
 	}
-	
-	public List<ProviderBean> getTripDeals(String userName, String attractionName) {
+
+	/**
+	 * Queries TripPricer to get 5 providers for a given attraction
+	 * @param userName
+	 * @param attractionUUID
+	 * @return the list of providers
+	 */
+	public List<ProviderBean> getTripDeals(String userName, UUID attractionUUID) {
 		User user = getUser(userName);
-		//tripPricer.getPrice use attractionId and not UserId.
-		//We don't have the tools to retrieve attractionId from attractionName so I have let UserId ...
 
 		int cumulativeRewardPoints = user.getUserRewards().stream().mapToInt(UserReward::getRewardPoints).sum();
-		List<ProviderBean> providers = tripPricerMicroserviceProxy.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(),
+		List<ProviderBean> providers = tripPricerMicroserviceProxy.getProviderList(tripPricerApiKey, attractionUUID, user.getUserPreferences().getNumberOfAdults(),
 				user.getUserPreferences().getNumberOfChildren(), user.getUserPreferences().getTripDuration(), cumulativeRewardPoints);
 		user.setTripDeals(providers);
 		return providers;
 	}
-	
+
+	/**
+	 * Retrieves the current location of all connected users
+	 * @return the list
+	 */
 	public List<UserCurrentLocationDTO> getAllCurrentLocations() {
 		List<User> users = getAllUsers();
-
 		List<UserCurrentLocationDTO> userCurrentLocationDTOs = users.parallelStream()
 				.map(user -> {
 					try {
@@ -153,6 +197,9 @@ public class TourGuideService {
 		return userCurrentLocationDTOs;
 	}
 
+	/**
+	 * To stop the tracker
+	 */
 	private void addShutDownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() { 
 		      public void run() {
@@ -161,53 +208,59 @@ public class TourGuideService {
 		    }); 
 	}
 
-	public User updateUserPreferences(String userName, UserPreferencesDTO userPreferencesDTO) throws UnknownCurrencyException {
+	/**
+	 * Updates the user preferences
+	 * @param userName
+	 * @return the updated user
+	 */
+	public User updateUserPreferences(String userName, UserPreferencesDTO userPreferencesDTO) {
 		User user = getUser(userName);
-		if (user != null) {
-			UserPreferences userPreferences = user.getUserPreferences();
-			userPreferences.setAttractionProximity(userPreferencesDTO.getAttractionProximity());
-			userPreferences.setCurrency(Monetary.getCurrency(userPreferencesDTO.getCurrency()));
-			userPreferences.setHighPricePoint(Money.of(userPreferencesDTO.getHighPricePoint(), userPreferencesDTO.getCurrency()));
-			userPreferences.setLowerPricePoint(Money.of(userPreferencesDTO.getLowerPricePoint(), userPreferencesDTO.getCurrency()));
-			userPreferences.setNumberOfAdults(userPreferencesDTO.getNumberOfAdults());
-			userPreferences.setNumberOfChildren(userPreferencesDTO.getNumberOfChildren());
-			userPreferences.setTicketQuantity(userPreferencesDTO.getTicketQuantity());
-			userPreferences.setTripDuration(userPreferencesDTO.getTripDuration());
-			user.setUserPreferences(userPreferences);
-		}
+
+		UserPreferences userPreferences = user.getUserPreferences();
+		userPreferences.setAttractionProximity(userPreferencesDTO.getAttractionProximity());
+		userPreferences.setCurrency(Monetary.getCurrency(userPreferencesDTO.getCurrency()));
+		userPreferences.setHighPricePoint(Money.of(userPreferencesDTO.getHighPricePoint(), userPreferencesDTO.getCurrency()));
+		userPreferences.setLowerPricePoint(Money.of(userPreferencesDTO.getLowerPricePoint(), userPreferencesDTO.getCurrency()));
+		userPreferences.setNumberOfAdults(userPreferencesDTO.getNumberOfAdults());
+		userPreferences.setNumberOfChildren(userPreferencesDTO.getNumberOfChildren());
+		userPreferences.setTicketQuantity(userPreferencesDTO.getTicketQuantity());
+		userPreferences.setTripDuration(userPreferencesDTO.getTripDuration());
+		user.setUserPreferences(userPreferences);
+
 		return user;
 	}
 
+	/**
+	 * Gives the user preferences
+	 * @param userName
+	 * @return user preferences
+	 */
 	public UserPreferencesDTO getUserPreferences(String userName) {
 		User user = getUser(userName);
 		UserPreferencesDTO userPreferencesDTO = new UserPreferencesDTO();
 
-		if (user == null) {
-			//attractionProximity to be tested to check the existence of the user
-			userPreferencesDTO.setAttractionProximity(-1);
-		} else {
-			UserPreferences userPreferences = user.getUserPreferences();
-			userPreferencesDTO.setAttractionProximity(userPreferences.getAttractionProximity());
-			userPreferencesDTO.setCurrency(userPreferences.getCurrency().getCurrencyCode());
-			userPreferencesDTO.setHighPricePoint(userPreferences.getHighPricePoint().getNumber().intValue());
-			userPreferencesDTO.setLowerPricePoint(userPreferences.getLowerPricePoint().getNumber().intValue());
-			userPreferencesDTO.setNumberOfAdults(userPreferences.getNumberOfAdults());
-			userPreferencesDTO.setNumberOfChildren(userPreferences.getNumberOfChildren());
-			userPreferencesDTO.setTicketQuantity(userPreferences.getTicketQuantity());
-			userPreferencesDTO.setTripDuration(userPreferences.getTripDuration());
 
-		}
+		UserPreferences userPreferences = user.getUserPreferences();
+		userPreferencesDTO.setAttractionProximity(userPreferences.getAttractionProximity());
+		userPreferencesDTO.setCurrency(userPreferences.getCurrency().getCurrencyCode());
+		userPreferencesDTO.setHighPricePoint(userPreferences.getHighPricePoint().getNumber().intValue());
+		userPreferencesDTO.setLowerPricePoint(userPreferences.getLowerPricePoint().getNumber().intValue());
+		userPreferencesDTO.setNumberOfAdults(userPreferences.getNumberOfAdults());
+		userPreferencesDTO.setNumberOfChildren(userPreferences.getNumberOfChildren());
+		userPreferencesDTO.setTicketQuantity(userPreferences.getTicketQuantity());
+		userPreferencesDTO.setTripDuration(userPreferences.getTripDuration());
+
+
 		return userPreferencesDTO;
 	}
 
+	/**
+	 * Gives the 5 closest attractions of the given visited location
+	 * @param visitedLocation
+	 * @return The list of attraction
+	 */
 	public List<ClosestAttractionDTO> getNearByAttractions(VisitedLocationBean visitedLocation) {
 		List<AttractionBean> attractions = gpsMicroserviceProxy.getAttractionsList();
-
-//		logger.debug("Visited location : " + visitedLocation.location.longitude + " - " + visitedLocation.location.latitude);
-//		for (Attraction attraction : attractions) {
-//			logger.debug("Attraction " + attraction.attractionName + " distance : "
-//					+ rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location));
-//		}
 
 		List<ClosestAttractionDTO> closestAttractionDTOs = attractions.parallelStream()
 				//Create a ClosestAttractionDTO form an Attraction, calculating the distance Attraction/User
@@ -222,35 +275,11 @@ public class TourGuideService {
 				.collect(Collectors.toList());
 
 		closestAttractionDTOs = closestAttractionDTOs.parallelStream()
-				.peek(attraction -> {attraction.setVisitedLocation(visitedLocation.location);
+				.peek(attraction -> {
+					attraction.setVisitedLocation(visitedLocation.location);
 					attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(), visitedLocation.userId));
 				})
 				.collect(Collectors.toList());
-
-//		for (ClosestAttractionDTO attraction : closestAttractionDTOs) {
-//			attraction.setVisitedLocation(visitedLocation.location);
-//			attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(),
-//					visitedLocation.userId));
-//			logger.debug("Attraction " + attraction.getAttractionName() + " - "
-//						+ attraction.getAttractionLocation().latitude +  " - "
-//						+ attraction.getAttractionLocation().longitude +  " - "
-//						+ visitedLocation.location.latitude +  " - "
-//						+ visitedLocation.location.longitude +  " - "
-//						+ attraction.getDistance());
-//		}
-
-//		closestAttractionDTOs.forEach( attraction -> {
-//					attraction.setVisitedLocation(visitedLocation.location);
-//					attraction.setRewardPoints(rewardsService.getRewardCentralPoints(attraction.getAttractionId(),
-//							visitedLocation.userId));
-//					logger.debug("Attraction " + attraction.getAttractionName() + " - "
-//							+ attraction.getAttractionLocation().latitude + " - "
-//							+ attraction.getAttractionLocation().longitude + " - "
-//							+ visitedLocation.location.latitude + " - "
-//							+ visitedLocation.location.longitude + " - "
-//							+ attraction.getDistance());
-//				}
-//		);
 
 		return closestAttractionDTOs;
 	}
