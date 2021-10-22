@@ -18,7 +18,6 @@ import tourGuide.model.user.User;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -58,8 +57,6 @@ public class TestPerformance {
 
 	@Test
 	public void highVolumeTrackLocation() {
-		Locale englishLocale = new Locale("en", "EN");
-		Locale.setDefault(englishLocale);
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
 		InternalTestHelper.setInternalUserNumber(100000);
@@ -71,7 +68,7 @@ public class TestPerformance {
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		try {
-			allUsers.forEach(user -> tourGuideService.getNewUserLocation(user, trackLatch));
+			allUsers.forEach(user -> tourGuideService.getUserNewLocation(user, trackLatch));
 			trackLatch.await();
 		} catch (InterruptedException e) {
 			System.out.println("getLocation - Error during retrieving user location");
@@ -87,8 +84,6 @@ public class TestPerformance {
 	//@Ignore
 	@Test
 	public void highVolumeGetRewards() {
-		Locale englishLocale = new Locale("en", "EN");
-		Locale.setDefault(englishLocale);
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 
 		// Users should be incremented up to 100,000, and test finishes within 20 minutes
@@ -106,7 +101,7 @@ public class TestPerformance {
 
 		// Calcul des rewards via le getNewUserLocation
 		try {
-			allUsers.forEach(user -> tourGuideService.getNewUserLocation(user, trackLatch));
+			allUsers.forEach(user -> tourGuideService.getUserNewLocation(user, trackLatch));
 			trackLatch.await();
 		} catch (InterruptedException e) {
 			System.out.println("getLocation - Error during retrieving user location & rewards");

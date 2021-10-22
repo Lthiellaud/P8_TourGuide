@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import tourGuide.exception.NotFoundException;
+import tourGuide.model.DTO.ClosestAttractionDTO;
 import tourGuide.model.beans.ProviderBean;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.DTO.UserCurrentLocationDTO;
@@ -19,7 +20,6 @@ import tourGuide.model.user.UserPreferences;
 
 import javax.money.Monetary;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
@@ -41,15 +41,13 @@ public class TestTourGuideService {
 
 	@Test
 	public void getUserLocation() throws InterruptedException {
-		Locale englishLocale = new Locale("en", "EN");
-		Locale.setDefault(englishLocale);
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 		InternalTestHelper.setInternalUserNumber(0);
 		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		CountDownLatch trackLatch = new CountDownLatch( 1 );
-		tourGuideService.getNewUserLocation(user, trackLatch);
+		tourGuideService.getUserNewLocation(user, trackLatch);
 		trackLatch.await();
 		tourGuideService.tracker.stopTracking();
 		assertEquals(user.getVisitedLocations().get(0).userId, user.getUserId());
@@ -187,4 +185,39 @@ public class TestTourGuideService {
 		assertEquals(Money.of(100, Monetary.getCurrency("EUR")) ,newUserPreferences.getLowerPricePoint());
 		assertEquals(5,newUserPreferences.getTicketQuantity());
 	}
+
+	@Test
+	public void getNearbyAttractions() throws InterruptedException {
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
+		InternalTestHelper.setInternalUserNumber(0);
+
+		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
+
+		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
+		tourGuideService.addUser(user);
+		List<ClosestAttractionDTO> closestAttractionDTOs = tourGuideService.getNearByAttractions(tourGuideService.getUserLocation("jon"));
+
+		tourGuideService.tracker.stopTracking();
+
+		assertEquals(5, closestAttractionDTOs.size());
+	}
+
+	@Test
+	public void trackUser() throws InterruptedException {
+		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
+		InternalTestHelper.setInternalUserNumber(0);
+		TourGuideService tourGuideService = new TourGuideService(gpsMicroserviceProxy, rewardsService, tripPricerMicroserviceProxy);
+
+		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
+
+		CountDownLatch trackLatch = new CountDownLatch( 1 );
+		tourGuideService.getUserNewLocation(user, trackLatch);
+		trackLatch.await();
+
+		tourGuideService.tracker.stopTracking();
+
+		assertEquals(user.getUserId(), tourGuideService.getLastVisitedLocation(user).userId);
+		assertEquals(user.getVisitedLocations().size(), 1);
+	}
+
 }

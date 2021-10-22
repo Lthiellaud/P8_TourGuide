@@ -48,7 +48,7 @@ public class Tracker extends Thread {
 			LOGGER.debug("Begin Tracker. Tracking " + users.size() + " users.");
 			stopWatch.start();
 			try {
-				users.forEach(u -> tourGuideService.getNewUserLocation(u, trackLatch));
+				users.forEach(u -> tourGuideService.getUserNewLocation(u, trackLatch));
 				trackLatch.await();
 			} catch (InterruptedException e) {
 				LOGGER.error("getLocation - Error during retrieving user location");

@@ -45,7 +45,7 @@ public class TourGuideService {
 	public final Tracker tracker;
 	boolean testMode = true;
 
-	ExecutorService executorGps = Executors.newFixedThreadPool(125);
+	ExecutorService executorGps = Executors.newFixedThreadPool(150);
 
 
 	public TourGuideService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsService rewardsService,
@@ -97,7 +97,7 @@ public class TourGuideService {
 
 		if (user.getVisitedLocations().size() == 0) {
 			CountDownLatch trackLatch = new CountDownLatch( 1 );
-			getNewUserLocation(user, trackLatch);
+			getUserNewLocation(user, trackLatch);
 			trackLatch.await();
 		}
 
@@ -106,10 +106,10 @@ public class TourGuideService {
 
 	/**
 	 * Tracks a user to get a new visited Location
-	 * @param user ti be tracked
+	 * @param user to be tracked
 	 * @param trackLatch countdown latch
 	 */
-	public void getNewUserLocation(User user, CountDownLatch trackLatch) {
+	public void getUserNewLocation(User user, CountDownLatch trackLatch) {
 		CompletableFuture.supplyAsync(() -> gpsMicroserviceProxy.getUserLocation(user.getUserId()), executorGps)
 				.thenAccept(loc -> updateUserVisitedLocationData(loc, user, trackLatch));
 

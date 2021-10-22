@@ -16,7 +16,6 @@ import tourGuide.model.user.UserReward;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
@@ -38,8 +37,6 @@ public class TestRewardsService {
 
 	@Test
 	public void userGetRewards() throws InterruptedException {
-		Locale englishLocale = new Locale("en", "EN");
-		Locale.setDefault(englishLocale);
 		RewardsService rewardsService = new RewardsService(gpsMicroserviceProxy, rewardsMicroserviceProxy);
 
 		InternalTestHelper.setInternalUserNumber(0);
@@ -51,7 +48,7 @@ public class TestRewardsService {
 		user.addToVisitedLocations(new VisitedLocationBean(user.getUserId(), attraction, new Date()));
 
 		CountDownLatch trackLatch = new CountDownLatch( 1 );
-		tourGuideService.getNewUserLocation(user, trackLatch);
+		tourGuideService.getUserNewLocation(user, trackLatch);
 		trackLatch.await();
 
 		List<UserReward> userRewards = user.getUserRewards();
