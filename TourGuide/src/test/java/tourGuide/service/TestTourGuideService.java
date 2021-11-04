@@ -50,6 +50,8 @@ public class TestTourGuideService {
 		tourGuideService.getUserNewLocation(user, trackLatch);
 		trackLatch.await();
 		tourGuideService.tracker.stopTracking();
+		tourGuideService.stopGps();
+
 		assertEquals(user.getVisitedLocations().get(0).userId, user.getUserId());
 	}
 	
@@ -69,7 +71,8 @@ public class TestTourGuideService {
 		User retrievedUser2 = tourGuideService.getUser(user2.getUserName());
 
 		tourGuideService.tracker.stopTracking();
-		
+		tourGuideService.stopGps();
+
 		assertEquals(user, retrievedUser);
 		assertEquals(user2, retrievedUser2);
 	}
@@ -89,7 +92,8 @@ public class TestTourGuideService {
 		List<User> allUsers = tourGuideService.getAllUsers();
 
 		tourGuideService.tracker.stopTracking();
-		
+		tourGuideService.stopGps();
+
 		assertTrue(allUsers.contains(user));
 		assertTrue(allUsers.contains(user2));
 	}
@@ -103,7 +107,8 @@ public class TestTourGuideService {
 		List<ProviderBean> providers = tourGuideService.getTripDeals("internalUser0", UUID.randomUUID());
 		
 		tourGuideService.tracker.stopTracking();
-		
+		tourGuideService.stopGps();
+
 		assertEquals(5, providers.size());
 	}
 
@@ -116,6 +121,7 @@ public class TestTourGuideService {
 		List<UserCurrentLocationDTO> userCurrentLocationDTOs = tourGuideService.getAllCurrentLocations();
 
 		tourGuideService.tracker.stopTracking();
+		tourGuideService.stopGps();
 
 		assertEquals(4,userCurrentLocationDTOs.size());
 	}
@@ -132,6 +138,7 @@ public class TestTourGuideService {
 			assertEquals("user internalUser2 not found", e.getMessage());
 		}
 		tourGuideService.tracker.stopTracking();
+		tourGuideService.stopGps();
 
 	}
 
@@ -144,6 +151,7 @@ public class TestTourGuideService {
 		UserPreferencesDTO userPreferencesDTO = tourGuideService.getUserPreferences("internalUser0");
 
 		tourGuideService.tracker.stopTracking();
+		tourGuideService.stopGps();
 
 		assertEquals(Integer.MAX_VALUE, userPreferencesDTO.getAttractionProximity());
 		assertEquals(1,userPreferencesDTO.getTripDuration());
@@ -174,6 +182,7 @@ public class TestTourGuideService {
 		User user = tourGuideService.updateUserPreferences("internalUser0", userPreferences);
 
 		tourGuideService.tracker.stopTracking();
+		tourGuideService.stopGps();
 
 		UserPreferences newUserPreferences = user.getUserPreferences();
 		assertEquals(7,newUserPreferences.getTripDuration());
@@ -198,6 +207,7 @@ public class TestTourGuideService {
 		List<ClosestAttractionDTO> closestAttractionDTOs = tourGuideService.getNearByAttractions(tourGuideService.getUserLocation("jon"));
 
 		tourGuideService.tracker.stopTracking();
+		tourGuideService.stopGps();
 
 		assertEquals(5, closestAttractionDTOs.size());
 	}
@@ -215,6 +225,7 @@ public class TestTourGuideService {
 		trackLatch.await();
 
 		tourGuideService.tracker.stopTracking();
+		tourGuideService.stopGps();
 
 		assertEquals(user.getUserId(), tourGuideService.getLastVisitedLocation(user).userId);
 		assertEquals(user.getVisitedLocations().size(), 1);

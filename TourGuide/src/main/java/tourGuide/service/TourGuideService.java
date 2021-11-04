@@ -45,7 +45,7 @@ public class TourGuideService {
 	public final Tracker tracker;
 	boolean testMode = true;
 
-	ExecutorService executorGps = Executors.newFixedThreadPool(150);
+	private final ExecutorService executorGps = Executors.newFixedThreadPool(150);
 
 
 	public TourGuideService(GpsMicroserviceProxy gpsMicroserviceProxy, RewardsService rewardsService,
@@ -198,12 +198,20 @@ public class TourGuideService {
 	}
 
 	/**
+	 * Assures to shut down the Gps thread
+	 */
+	public void stopGps() {
+		executorGps.shutdownNow();
+	}
+
+	/**
 	 * To stop the tracker
 	 */
 	private void addShutDownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() { 
 		      public void run() {
 		        tracker.stopTracking();
+				stopGps();
 		      } 
 		    }); 
 	}
